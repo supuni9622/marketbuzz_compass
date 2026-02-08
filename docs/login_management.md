@@ -102,3 +102,17 @@ how many Charge IDs inserted/updated
 metrics refresh success/failure
 
 This is huge for trust.
+
+```
+
+User signs in → Cognito returns JWT with cognito:groups
+                          ↓
+Backend receives request with Authorization: Bearer <JWT>
+                          ↓
+Auth middleware validates JWT and extracts groups
+                          ↓
+For /admin/upload/csv → requireAdmin hook checks groups.includes("Admin")
+   - Admin → 200 OK
+   - Viewer → 403 Forbidden
+
+```

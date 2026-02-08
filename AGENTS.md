@@ -62,8 +62,8 @@ Human and AI agents working on this project should follow this guide for consist
 
 ### Stack
 - **Frontend**: Next.js (App Router), Cognito Hosted UI
-- **Backend**: Node.js + TypeScript (Fastify/NestJS)
-- **Database**: Postgres (RDS)
+- **Backend**: Node.js + TypeScript (Fastify)
+- **Database**: Supabase (dev) / Postgres RDS (prod)
 - **Storage**: S3 (uploads + memory)
 - **Queue**: SQS (ingestion jobs)
 - **Cache**: Redis (optional, version-based invalidation)
@@ -74,6 +74,9 @@ Human and AI agents working on this project should follow this guide for consist
 |-------|-----|
 | Product & data model | `docs/PRD.md`, `docs/DATA_MODEL_SPEC.md` |
 | Ingestion | `docs/INGESTION_WORKFLOW.md` |
+| Clover CSV input | `docs/CLOVER_CSV_SCHEMA.md` |
+| Supabase & RLS | `docs/progressql_supabase_rsl_decisions.md` |
+| Progress tracker | `docs/PROGRESS.md` |
 | Nova agent | `docs/AGENT_SPEC.md`, `docs/NOVA_LLM_DECISION.md` |
 | Memory | `docs/MEMORY_FILE_STRUCTURE.md`, `docs/NOVA_MEMORY_LOADING_ALGORITHM.md`, `docs/MEMORY_AND_CACHE_INALIDATION_STRATEGY.md` |
 | LLM routing | `docs/LLM_MODEL_ROUTER_PSUDOCODE.md`, `docs/workflow_budgets.json` |
@@ -155,7 +158,7 @@ Allowed data sources:
 ## Tech Stack Additions
 - Zod: validation (API + frontend)
 - Zustand: frontend state management
-- React Query: server state, caching
+- @tanstack/react-query: server state, caching
 - Lazy loading: dynamic imports for routes/components
 - Error boundaries: layout-level + fallback UI
 - Swagger: API documentation via @fastify/swagger

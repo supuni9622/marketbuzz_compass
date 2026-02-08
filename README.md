@@ -30,7 +30,7 @@ pnpm install
 ### 2. Supabase Setup
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Copy `.env.example` to `.env` in project root
+2. Copy `.env.example` to `.env` in **project root** (required — API loads from monorepo root)
 3. Add `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` from Supabase Dashboard → Project Settings → API
 4. Run migrations (Supabase Dashboard → SQL Editor, or use Supabase CLI):
 
@@ -38,8 +38,8 @@ pnpm install
 # Option A: Supabase CLI
 pnpm exec supabase db push
 
-# Option B: Run each migration file manually in SQL Editor
-# Files in supabase/migrations/
+# Option B: Run each migration file manually in SQL Editor (in order)
+# supabase/migrations/20240207000001 through 20240207000009
 ```
 
 ### 3. Run API
@@ -76,5 +76,6 @@ marketbuzz_compass/
 ## Docs
 
 - [AGENTS.md](./AGENTS.md) — Project guidelines
-- [docs/PROGRESS.md](./docs/PROGRESS.md) — Task tracker
+- [docs/PROGRESS.md](./docs/PROGRESS.md) — Task tracker & handoff for new context
 - [docs/DATA_MODEL_SPEC.md](./docs/DATA_MODEL_SPEC.md) — Data model
+- [docs/CLOVER_CSV_SCHEMA.md](./docs/CLOVER_CSV_SCHEMA.md) — Clover CSV input format

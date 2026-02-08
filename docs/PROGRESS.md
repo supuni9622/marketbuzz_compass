@@ -1,8 +1,8 @@
 # MarketBuzz Compass — Progress Tracker
 
-**Last updated:** 2026-02-07  
+**Last updated:** 2026-02-08  
 **Current phase:** MVP  
-**Status:** Day 1 in progress
+**Status:** Day 2 complete → Day 3 (ingestion pipeline + Worker) next
 
 ---
 
@@ -17,24 +17,27 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] Environment config (.env.example)
 
 ### 2. Database
-- [ ] Supabase project created (manual: create at supabase.com)
+- [x] Supabase project created
 - [x] Migrations: `charges_raw`, `ingestion_uploads`, `ingestion_runs`
 - [x] Migrations: `monthly_revenue_lifecycle`, `merchant_lifecycle_monthly`
 - [x] Migrations: `nra_monthly`, `nra_merchants_monthly`
 - [x] Migrations: `refund_merchants_monthly`, `uninstall_merchants_monthly`, `high_risk_churn_merchants`
 - [x] Migrations: `monthly_briefs`, `package_catalog`, `growth_forecast_monthly`
+- [x] Migration: RLS tripwire (000009_enable_rls_tripwire.sql)
 - [x] Indexes per DATA_MODEL_SPEC
 
 ### 3. AWS Setup
-- [ ] S3 bucket (uploads + memory)
-- [ ] Cognito User Pool + Groups (Admin, Viewer)
-- [ ] Cognito Hosted UI config
+- [x] S3 bucket (marketbuzz-compass-uploads)
+- [x] Cognito User Pool + Groups (Admin, Viewer)
+- [x] Cognito Managed login (Hosted UI, callback URLs, OAuth)
+- [x] IAM user + access keys for S3
+- [x] Test user (Admin) with confirmed password
 
 ### 4. Backend API (Fastify)
 - [x] Project scaffold
 - [x] DB connection (Supabase/Postgres)
-- [ ] Auth middleware (JWT validation, RBAC)
-- [ ] CSV upload endpoint (validate, store S3, enqueue)
+- [x] Auth middleware (JWT validation, RBAC)
+- [x] CSV upload endpoint (validate, store S3, enqueue)
 - [ ] SQS queue + Worker Lambda handler (or local worker script)
 - [ ] Metrics endpoints (KPIs, MoM compare)
 - [ ] Merchant list endpoints (paginated)
@@ -99,15 +102,36 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 |------|------|-------|
 | 2026-02-07 | Monorepo structure | pnpm workspaces, apps/api, apps/web, packages/shared |
 | 2026-02-07 | Shared package | Types, constants, Zod schemas |
-| 2026-02-07 | Supabase migrations | 8 migration files for all tables |
+| 2026-02-07 | Supabase migrations | 9 migration files (8 tables + RLS tripwire) |
 | 2026-02-07 | API scaffold | Fastify + Swagger + health routes + DB connection |
 | 2026-02-07 | Next.js scaffold | Minimal app with App Router |
+| 2026-02-07 | Config fix | .env loads from monorepo root (apps/api/src → ../../../.env) |
+| 2026-02-07 | Swagger fix | Removed jsonSchemaTransform; docs at /docs work |
+| 2026-02-07 | React Query fix | Use @tanstack/react-query, not react-query |
+| 2026-02-08 | S3 bucket | marketbuzz-compass-uploads, IAM user + keys |
+| 2026-02-08 | Cognito User Pool | marketbuzz-compass-pool, Groups Admin/Viewer |
+| 2026-02-08 | Cognito Managed login | OAuth code grant, callback/sign-out URLs, scopes |
+| 2026-02-08 | Test user | supuni in Admin group, confirmed password |
+| 2026-02-08 | .env | COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, COGNITO_REGION |
+| 2026-02-08 | Auth middleware | JWT via Cognito JWKS, requireAdmin hook |
+| 2026-02-08 | CSV upload endpoint | POST /admin/upload/csv, multipart, S3, ingestion_uploads/runs |
+| 2026-02-08 | CSV upload E2E test | Postman + S3 verified; file in clover_csv/2026/02/ |
 
 ---
 
+## Troubleshooting (Day 1 fixes)
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| `db: "not_configured"` | .env loaded from `cwd` (apps/api) | Load `.env` from monorepo root in `apps/api/src/config.ts` |
+| Swagger "Failed to load API definition" | `jsonSchemaTransform` expects Zod schemas | Remove `transform: jsonSchemaTransform` from Swagger config |
+| `react-query` not found | Wrong package name | Use `@tanstack/react-query` |
+
 ## Blockers / Notes
 - OpenAI API key: see setup guide below
-- Cognito: needs User Pool + Groups setup
+- Cognito: complete. See `docs/login_management.md` for user/password setup
+
+## Handoff for New Context
+When starting a new chat, say: *"Continue MarketBuzz Compass Day 3: ingestion pipeline (parse, upsert, recompute) + Worker. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/CLOVER_CSV_SCHEMA.md for context. Backend is Fastify, DB is Supabase, monorepo with apps/api and apps/web."*
 
 ---
 

@@ -2,10 +2,10 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
-import { jsonSchemaTransform } from "fastify-type-provider-zod";
 import { config } from "./config.js";
 import { db } from "./db.js";
 import { healthRoutes } from "./routes/health.js";
+import { adminUploadRoutes } from "./routes/admin/upload.js";
 
 const app = Fastify({ logger: true });
 
@@ -20,13 +20,13 @@ async function start() {
       },
       servers: [{ url: `http://localhost:${config.port}`, description: "Local" }],
     },
-    transform: jsonSchemaTransform,
   });
   await app.register(swaggerUi, {
     routePrefix: "/docs",
   });
 
   await app.register(healthRoutes, { prefix: "/health" });
+  await app.register(adminUploadRoutes, { prefix: "/admin" });
 
   try {
     await app.listen({ port: config.port, host: config.host });
