@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-02-08  
 **Current phase:** MVP  
-**Status:** Day 2 complete → Day 3 (ingestion pipeline + Worker) next
+**Status:** Day 3 partial — ingestion pipeline code complete, API→SQS→Lambda flow wired; Lambda fails with Runtime.Unknown (blocker)
 
 ---
 
@@ -32,23 +32,26 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] Cognito Managed login (Hosted UI, callback URLs, OAuth)
 - [x] IAM user + access keys for S3
 - [x] Test user (Admin) with confirmed password
+- [x] SQS queue (marketbuzz-compass-ingestion)
+- [x] Lambda function (marketbuzz-compass-ingestion-worker)
 
 ### 4. Backend API (Fastify)
 - [x] Project scaffold
 - [x] DB connection (Supabase/Postgres)
 - [x] Auth middleware (JWT validation, RBAC)
 - [x] CSV upload endpoint (validate, store S3, enqueue)
-- [ ] SQS queue + Worker Lambda handler (or local worker script)
+- [x] SQS queue + Lambda handler (SQS created, Lambda created, code deployed)
+- [ ] Lambda Runtime.Unknown fix (currently failing)
 - [ ] Metrics endpoints (KPIs, MoM compare)
 - [ ] Merchant list endpoints (paginated)
 - [ ] Brief endpoint (placeholder narrative)
 
 ### 5. Ingestion Pipeline
-- [ ] CSV parser (Clover schema)
-- [ ] Validation rules
-- [ ] UPSERT into `charges_raw`
-- [ ] Recompute logic for canonical tables
-- [ ] Audit logging (ingestion_uploads, ingestion_runs)
+- [x] CSV parser (Clover schema)
+- [x] Validation rules
+- [x] UPSERT into `charges_raw`
+- [x] Recompute logic for canonical tables
+- [x] Audit logging (ingestion_uploads, ingestion_runs)
 
 ### 6. Frontend (Next.js)
 - [x] Project scaffold
@@ -116,6 +119,15 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-08 | Auth middleware | JWT via Cognito JWKS, requireAdmin hook |
 | 2026-02-08 | CSV upload endpoint | POST /admin/upload/csv, multipart, S3, ingestion_uploads/runs |
 | 2026-02-08 | CSV upload E2E test | Postman + S3 verified; file in clover_csv/2026/02/ |
+| 2026-02-08 | SQS queue | marketbuzz-compass-ingestion created |
+| 2026-02-08 | Lambda function | marketbuzz-compass-ingestion-worker, handler ingestion.handler |
+| 2026-02-08 | Ingestion pipeline code | parser, validator, upsert, recompute, pipeline (apps/api/src/ingestion/) |
+| 2026-02-08 | SQS service | sendIngestionJob() in apps/api/src/services/sqs.ts |
+| 2026-02-08 | S3 getCsv | For Lambda to fetch CSV from S3 |
+| 2026-02-08 | Lambda handler | apps/api/src/lambda/ingestion.ts, SQS-triggered |
+| 2026-02-08 | Upload → SQS | API sends message after S3 upload; env SQS_QUEUE_URL |
+| 2026-02-08 | Lambda IAM | SQS ReceiveMessage, S3 GetObject, CloudWatch Logs |
+| 2026-02-08 | API IAM | SQS SendMessage for upload |
 
 ---
 
@@ -126,12 +138,20 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | Swagger "Failed to load API definition" | `jsonSchemaTransform` expects Zod schemas | Remove `transform: jsonSchemaTransform` from Swagger config |
 | `react-query` not found | Wrong package name | Use `@tanstack/react-query` |
 
+## Troubleshooting (Day 3 – Lambda)
+| Issue | Cause | Fix (to try) |
+|-------|-------|--------------|
+| Lambda Runtime.Unknown | Handler/module fails to load before execution | Ensure SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, S3_BUCKET_UPLOADS in Lambda env. Try CJS build: remove `--format=esm` and output `ingestion.js` instead of `ingestion.mjs`. |
+| SQS ReceiveMessage permission | Lambda role missing SQS access | Add inline policy with sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes. See `docs/articles/aws-sqs-lambda-ingestion-setup.md`. |
+| AWS_REGION env var error | Lambda reserves AWS_REGION | Do not set AWS_REGION in Lambda env; Lambda provides it automatically. |
+
 ## Blockers / Notes
+- **Lambda Runtime.Unknown:** Ingestion Lambda fails with `Error Type: Runtime.Unknown` (~453ms). API→SQS→Lambda trigger works; Lambda receives message but crashes before handler runs. Pause: try CJS build, verify env vars, or run pipeline locally/sync for MVP.
 - OpenAI API key: see setup guide below
 - Cognito: complete. See `docs/login_management.md` for user/password setup
 
 ## Handoff for New Context
-When starting a new chat, say: *"Continue MarketBuzz Compass Day 3: ingestion pipeline (parse, upsert, recompute) + Worker. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/CLOVER_CSV_SCHEMA.md for context. Backend is Fastify, DB is Supabase, monorepo with apps/api and apps/web."*
+When starting a new chat, say: *"Continue MarketBuzz Compass Day 3: Lambda Runtime.Unknown blocker. Ingestion pipeline code is done (parser, upsert, recompute); API→SQS→Lambda wired. Lambda fails with Runtime.Unknown before handler runs. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/articles/aws-sqs-lambda-ingestion-setup.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
 
 ---
 

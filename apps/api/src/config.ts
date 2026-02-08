@@ -14,6 +14,7 @@ export const config = {
   // AWS
   awsRegion: process.env.AWS_REGION ?? "us-east-1",
   s3BucketUploads: process.env.S3_BUCKET_UPLOADS ?? "marketbuzz-compass-uploads",
+  sqsQueueUrl: process.env.SQS_QUEUE_URL ?? "",
   // Cognito
   cognitoUserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
   cognitoClientId: process.env.COGNITO_CLIENT_ID ?? "",

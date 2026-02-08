@@ -3,6 +3,7 @@ import multipart from "@fastify/multipart";
 import { createHash } from "crypto";
 import { db } from "../../db.js";
 import { uploadCsv } from "../../services/s3.js";
+import { sendIngestionJob } from "../../services/sqs.js";
 import { authMiddleware, requireAdmin } from "../../auth/middleware.js";
 
 // Required columns per INGESTION_WORKFLOW.md / CLOVER_CSV_SCHEMA.md
@@ -15,7 +16,6 @@ const REQUIRED_COLUMNS = [
   "Amount",
   "Status",
 ];
-const FALLBACK_APP_COLUMN = "App ID";
 
 function parseCsvHeaders(firstLine: string): string[] {
   return firstLine.split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
@@ -114,7 +114,7 @@ export async function adminUploadRoutes(app: FastifyInstance): Promise<void> {
                 Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
                 Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12",
               };
-              const month = `${m[3]}-${monthNames[m[2]] ?? "01"}`;
+              const month = `${m[3]}-${(m[2] && monthNames[m[2]]) ?? "01"}`;
               if (!monthsDetected.includes(month)) monthsDetected.push(month);
             }
           }
@@ -139,11 +139,33 @@ export async function adminUploadRoutes(app: FastifyInstance): Promise<void> {
           .select("run_id")
           .single();
 
-        if (runError) {
-          app.log.warn({ err: runError }, "Failed to create ingestion_run");
+        if (runError || !runRow) {
+          app.log.error({ err: runError }, "Failed to create ingestion_run");
+          await supabase
+            .from("ingestion_uploads")
+            .update({ status: "failure", error_message: "Failed to create ingestion run" })
+            .eq("upload_id", uploadId);
+          await reply.status(500).send({ error: "Failed to create ingestion run" });
+          return;
         }
 
-        const runId = runRow?.run_id ?? null;
+        const runId = runRow.run_id;
+
+        try {
+          await sendIngestionJob({
+            upload_id: uploadId,
+            run_id: runId,
+            s3_key: s3Key,
+          });
+        } catch (sqsErr) {
+          app.log.error({ err: sqsErr, uploadId }, "Failed to send ingestion job to SQS");
+          await supabase
+            .from("ingestion_uploads")
+            .update({ status: "failure", error_message: String(sqsErr) })
+            .eq("upload_id", uploadId);
+          await reply.status(500).send({ error: "Failed to enqueue ingestion job" });
+          return;
+        }
 
         await reply.status(202).send({
           upload_id: uploadId,

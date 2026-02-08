@@ -32,35 +32,59 @@ After creation, note the **Queue URL** (e.g. `https://sqs.us-east-1.amazonaws.co
 
 ---
 
+## 1b. Cost & Volume Considerations
+
+MarketBuzz Compass expects **1–10 CSV uploads per month**. At this volume, AWS costs are negligible and stay within free tiers.
+
+### Cost at This Volume
+
+| Service | Usage | Monthly cost |
+|---------|-------|--------------|
+| **SQS** | 1–10 SendMessage + 1–10 ReceiveMessage | **$0** (free tier: 1M requests) |
+| **Lambda** | 1–10 invocations, ~5–15 min each | **$0** (free tier: 1M requests, 400K GB-seconds) |
+| **S3** | 1–10 PUTs, 1–10 GETs, small storage | **$0** |
+
+### SQS Setting Recommendations
+
+| Setting | Value | Reason |
+|---------|-------|--------|
+| **Queue type** | Standard | Cheaper than FIFO; ordering not needed for ingestion |
+| **Visibility timeout** | 900 s (15 min) | Must be ≥ Lambda timeout so messages aren't redelivered while processing |
+| **Message retention** | 4 days (default) | Fine for low volume; minimal cost either way |
+| **Receive message wait time** | 0 or 20 s | No practical cost difference at 1–10 jobs/month. Use 20 s (long polling) if you want fewer empty receives. |
+| **Maximum receives** | 3 | Reasonable retry limit; after 3 failures, message is discarded (or moved to DLQ if configured) |
+| **Dead-letter queue** | **Skip for MVP** | Simplest setup. Add later if you need failure visibility. Cost impact is minimal either way. |
+
+**Summary:** Use defaults; no cost optimization needed. Cost only becomes relevant at hundreds or thousands of uploads per month.
+
+---
+
 ## 2. Create IAM Role for Lambda
 
-Lambda needs an execution role with permissions for SQS, S3, and CloudWatch Logs.
+Lambda needs an execution role with permissions for **SQS, S3, and CloudWatch Logs**.
+
+**Important:** `AWSLambdaBasicExecutionRole` alone is **not enough** – it only grants CloudWatch Logs. Without SQS permissions, adding the SQS trigger will fail with: *"The function execution role does not have permissions to call ReceiveMessage on SQS"*.
 
 1. Go to **IAM** → **Roles** → **Create role**.
 2. **Trusted entity:** AWS service → **Lambda**.
 3. **Attach policies:**
    - `AWSLambdaBasicExecutionRole` (CloudWatch Logs).
-   - Or create a custom policy (see below).
 4. **Role name:** `marketbuzz-compass-ingestion-lambda-role`.
 5. **Create role**.
+6. **Add SQS and S3 permissions** – after creating the role, add an inline policy (see below).
 
-### Custom policy (inline or managed)
+### Add SQS and S3 inline policy (required)
 
-If you prefer a least-privilege policy:
+After the role is created:
+
+1. Open the role → **Add permissions** → **Create inline policy**.
+2. **JSON** tab → paste the policy below (replace `YOUR_ACCOUNT_ID` and `us-east-1` with your values).
+3. **Next** → Policy name: `SQS-S3-Ingestion-Access` → **Create policy**.
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:*:*:*"
-    },
     {
       "Effect": "Allow",
       "Action": [
@@ -81,7 +105,7 @@ If you prefer a least-privilege policy:
 }
 ```
 
-Replace `YOUR_ACCOUNT_ID` and `us-east-1` with your values.
+Alternatively, when creating the role you can attach one combined policy (Logs + SQS + S3) instead of `AWSLambdaBasicExecutionRole` plus the inline policy. Use the same SQS and S3 statements above, plus the logs statements from `AWSLambdaBasicExecutionRole`.
 
 ---
 
@@ -107,7 +131,8 @@ Replace `YOUR_ACCOUNT_ID` and `us-east-1` with your values.
    | `SUPABASE_URL` | Your Supabase project URL |
    | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
    | `S3_BUCKET_UPLOADS` | `marketbuzz-compass-uploads` |
-   | `AWS_REGION` | `us-east-1` (or your region) |
+
+   **Note:** Do not set `AWS_REGION` – Lambda provides it automatically and reserves it. The AWS SDK uses it by default.
 
 3. **VPC:** Leave default (no VPC) – Supabase is public.
 
@@ -122,6 +147,16 @@ Replace `YOUR_ACCOUNT_ID` and `us-east-1` with your values.
 5. **Add**.
 
 Lambda will now be invoked when a message arrives in the queue.
+
+### If you get "The function execution role does not have permissions to call ReceiveMessage on SQS"
+
+The Lambda role is missing SQS permissions. Add them:
+
+1. Go to **IAM** → **Roles** → open your Lambda's execution role (e.g. `marketbuzz-compass-ingestion-lambda-role`).
+2. **Add permissions** → **Create inline policy** → **JSON** tab.
+3. Paste the SQS + S3 policy from Section 2 above (replace `YOUR_ACCOUNT_ID` and `us-east-1`).
+4. **Next** → Policy name: `SQS-S3-Ingestion-Access` → **Create policy**.
+5. Retry adding the SQS trigger in Lambda.
 
 ---
 
@@ -160,8 +195,7 @@ Use your preferred IaC tool. The handler export is `handler` from `ingestion.js`
 
 In Lambda configuration → **Runtime settings**:
 
-- **Handler:** `ingestion.handler` (if the entry file is `ingestion.js` in the root of the deployment package).
-- Or `lambda/ingestion.handler` if the structure is `lambda/ingestion.js`.
+- **Handler:** `ingestion.handler` (the build outputs `ingestion.mjs` in the deployment package root).
 
 ---
 

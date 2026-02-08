@@ -1,4 +1,5 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { Readable } from "stream";
 import { config } from "../config.js";
 
 let client: S3Client | null = null;
@@ -41,4 +42,26 @@ export async function uploadCsv(
   );
 
   return key;
+}
+
+/**
+ * Fetch CSV from S3 by key (for Lambda ingestion worker).
+ */
+export async function getCsv(s3Key: string): Promise<Buffer> {
+  const response = await getClient().send(
+    new GetObjectCommand({
+      Bucket: config.s3BucketUploads,
+      Key: s3Key,
+    })
+  );
+  const body = response.Body;
+  if (!body) {
+    throw new Error(`Empty response from S3 for key: ${s3Key}`);
+  }
+  const stream = body as Readable;
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
 }
