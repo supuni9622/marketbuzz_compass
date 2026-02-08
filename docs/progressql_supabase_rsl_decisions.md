@@ -80,8 +80,8 @@ flowchart LR
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **MVP** | RLS disabled (rely on API auth) | All DB access through API with service_role. No direct Supabase access from frontend. |
-| **Production** | Optional RLS for defense-in-depth | If enabled, policies deny anon access to internal tables. |
+| **MVP** | **RLS tripwire enabled** | Enable RLS + deny-all policy on internal tables. Prevents accidental future exposure if someone adds Supabase client usage. Cheap guardrail. |
+| **Scope** | RLS protects against direct Supabase access only | It does **not** protect against API mistakes — service_role bypasses RLS. |
 | **Auth** | Cognito, not Supabase Auth | RLS typically uses `auth.uid()` — we use Cognito JWT, so Supabase Auth context is empty. |
 
 ---
@@ -140,33 +140,86 @@ flowchart TD
 
 ---
 
-## 7) Why We Skip RLS for MVP
+## 7) What RLS Protects vs Does NOT Protect
 
-1. **Single access path** — All DB access goes through the API. No direct Supabase client in the frontend.
-2. **Auth at API layer** — Cognito JWT validation and Admin/Viewer checks happen in Fastify, not in PostgreSQL.
-3. **service_role bypasses RLS** — The API uses service_role, so RLS would not apply to our current traffic.
-4. **Cognito vs Supabase Auth** — RLS policies rely on `auth.uid()` from Supabase Auth. We use Cognito, so `auth.uid()` is not set. Defining useful RLS would require custom JWT configuration.
+### RLS protects against
+
+| Threat | How |
+|--------|-----|
+| **Direct Supabase client usage** | If someone adds `@supabase/supabase-js` in the frontend with anon key, RLS blocks access. |
+| **Accidental future exposure** | Tripwire catches mistakes before they reach production. |
+
+### RLS does NOT protect against (service_role bypasses it)
+
+| Threat | Reality |
+|--------|---------|
+| **API bugs** | IDOR, wrong filters, returning all rows — API has full access. |
+| **Debug endpoints** | Misconfigured routes that leak data. |
+| **SSRF / edge-case paths** | Any path that hits internal endpoints. |
+
+**Bottom line:** The API is the main security boundary. Safety depends on:
+- Perfect endpoint authorization (JWT + RBAC)
+- Correct scoping on every query (month, app_id, user context)
+- No IDOR bugs
+- No accidental "return all rows"
+- No debug endpoints or misconfigured routes
+
+RLS is a cheap tripwire for direct Supabase access. DB-level guardrails are cheap; fixing a leak later is expensive.
 
 ---
 
-## 8) Optional: RLS for Defense-in-Depth
+## 8) Recommended: RLS Tripwire Policy (MVP)
 
-If we later enable RLS, recommended approach:
+**Enable RLS and deny anon/authenticated on internal tables.** This prevents accidental future exposure if someone later adds Supabase client usage.
+
+Migration: `supabase/migrations/20240207000009_enable_rls_tripwire.sql`
 
 ```sql
--- Block anon access to internal tables
--- (API still uses service_role and bypasses these)
+-- Tripwire: block anon/authenticated access to internal tables
+-- API uses service_role and bypasses these policies
+-- Protects against: direct Supabase client usage, accidental future exposure
 
 ALTER TABLE charges_raw ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "charges_raw_internal" ON charges_raw
-  FOR ALL USING (false);  -- No anon access
+CREATE POLICY "charges_raw_tripwire" ON charges_raw FOR ALL USING (false);
+
+ALTER TABLE ingestion_uploads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ingestion_uploads_tripwire" ON ingestion_uploads FOR ALL USING (false);
+
+ALTER TABLE ingestion_runs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ingestion_runs_tripwire" ON ingestion_runs FOR ALL USING (false);
 
 ALTER TABLE monthly_revenue_lifecycle ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "mrl_internal" ON monthly_revenue_lifecycle
-  FOR ALL USING (false);
+CREATE POLICY "mrl_tripwire" ON monthly_revenue_lifecycle FOR ALL USING (false);
+
+ALTER TABLE merchant_lifecycle_monthly ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "mlm_tripwire" ON merchant_lifecycle_monthly FOR ALL USING (false);
+
+ALTER TABLE nra_monthly ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "nra_monthly_tripwire" ON nra_monthly FOR ALL USING (false);
+
+ALTER TABLE nra_merchants_monthly ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "nra_merchants_tripwire" ON nra_merchants_monthly FOR ALL USING (false);
+
+ALTER TABLE refund_merchants_monthly ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "refund_merchants_tripwire" ON refund_merchants_monthly FOR ALL USING (false);
+
+ALTER TABLE uninstall_merchants_monthly ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "uninstall_merchants_tripwire" ON uninstall_merchants_monthly FOR ALL USING (false);
+
+ALTER TABLE high_risk_churn_merchants ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "high_risk_churn_tripwire" ON high_risk_churn_merchants FOR ALL USING (false);
+
+ALTER TABLE package_catalog ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "package_catalog_tripwire" ON package_catalog FOR ALL USING (false);
+
+ALTER TABLE growth_forecast_monthly ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "growth_forecast_tripwire" ON growth_forecast_monthly FOR ALL USING (false);
+
+ALTER TABLE monthly_briefs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "monthly_briefs_tripwire" ON monthly_briefs FOR ALL USING (false);
 ```
 
-**Effect:** If anyone ever uses the anon key directly against these tables, they get no rows. The API (service_role) is unaffected.
+**Effect:** If anyone uses the anon key directly against these tables, they get no rows. The API (service_role) is unaffected.
 
 ---
 
@@ -185,7 +238,7 @@ CREATE POLICY "mrl_internal" ON monthly_revenue_lifecycle
 
 - **Client:** Uses Cognito JWT; talks only to the Fastify API.
 - **Server:** Uses `service_role` to access Supabase; RLS is bypassed.
-- **RLS:** Not used for MVP; optional later for defense-in-depth.
+- **RLS:** Tripwire enabled on all internal tables — denies anon/authenticated access. Protects against direct Supabase client usage only; does **not** protect against API mistakes.
 - **Auth:** Handled by Cognito and API middleware, not by Supabase RLS.
 
 ---
