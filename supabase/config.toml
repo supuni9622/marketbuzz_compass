@@ -1,0 +1,12 @@
+# Supabase local config (optional for local dev)
+# For remote Supabase: use dashboard + migrations
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public"]
+
+[db]
+port = 54322
+shadow_port = 54320

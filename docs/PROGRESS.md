@@ -1,8 +1,8 @@
 # MarketBuzz Compass — Progress Tracker
 
-**Last updated:** [DATE]  
+**Last updated:** 2026-02-07  
 **Current phase:** MVP  
-**Status:** Not started
+**Status:** Day 1 in progress
 
 ---
 
@@ -11,19 +11,19 @@
 Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 
 ### 1. Project Setup
-- [ ] Monorepo structure (`apps/web`, `apps/api`, `packages/shared`)
-- [ ] Shared TypeScript config
-- [ ] Shared types package
-- [ ] Environment config (.env.example)
+- [x] Monorepo structure (`apps/web`, `apps/api`, `packages/shared`)
+- [x] Shared TypeScript config
+- [x] Shared types package
+- [x] Environment config (.env.example)
 
 ### 2. Database
-- [ ] Supabase project created
-- [ ] Migrations: `charges_raw`, `ingestion_uploads`, `ingestion_runs`
-- [ ] Migrations: `monthly_revenue_lifecycle`, `merchant_lifecycle_monthly`
-- [ ] Migrations: `nra_monthly`, `nra_merchants_monthly`
-- [ ] Migrations: `refund_merchants_monthly`, `uninstall_merchants_monthly`, `high_risk_churn_merchants`
-- [ ] Migrations: `monthly_briefs`, `package_catalog`
-- [ ] Indexes per DATA_MODEL_SPEC
+- [ ] Supabase project created (manual: create at supabase.com)
+- [x] Migrations: `charges_raw`, `ingestion_uploads`, `ingestion_runs`
+- [x] Migrations: `monthly_revenue_lifecycle`, `merchant_lifecycle_monthly`
+- [x] Migrations: `nra_monthly`, `nra_merchants_monthly`
+- [x] Migrations: `refund_merchants_monthly`, `uninstall_merchants_monthly`, `high_risk_churn_merchants`
+- [x] Migrations: `monthly_briefs`, `package_catalog`, `growth_forecast_monthly`
+- [x] Indexes per DATA_MODEL_SPEC
 
 ### 3. AWS Setup
 - [ ] S3 bucket (uploads + memory)
@@ -31,8 +31,8 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [ ] Cognito Hosted UI config
 
 ### 4. Backend API (Fastify)
-- [ ] Project scaffold
-- [ ] DB connection (Supabase/Postgres)
+- [x] Project scaffold
+- [x] DB connection (Supabase/Postgres)
 - [ ] Auth middleware (JWT validation, RBAC)
 - [ ] CSV upload endpoint (validate, store S3, enqueue)
 - [ ] SQS queue + Worker Lambda handler (or local worker script)
@@ -48,7 +48,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [ ] Audit logging (ingestion_uploads, ingestion_runs)
 
 ### 6. Frontend (Next.js)
-- [ ] Project scaffold
+- [x] Project scaffold
 - [ ] Cognito auth flow (Hosted UI)
 - [ ] Global filters (Year, Month, Compare, App)
 - [ ] Monthly Brief page skeleton
@@ -97,7 +97,11 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 
 | Date | Task | Notes |
 |------|------|-------|
-| — | — | — |
+| 2026-02-07 | Monorepo structure | pnpm workspaces, apps/api, apps/web, packages/shared |
+| 2026-02-07 | Shared package | Types, constants, Zod schemas |
+| 2026-02-07 | Supabase migrations | 8 migration files for all tables |
+| 2026-02-07 | API scaffold | Fastify + Swagger + health routes + DB connection |
+| 2026-02-07 | Next.js scaffold | Minimal app with App Router |
 
 ---
 
