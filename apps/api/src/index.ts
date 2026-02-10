@@ -5,10 +5,12 @@ import swaggerUi from "@fastify/swagger-ui";
 import { config } from "./config.js";
 import { db } from "./db.js";
 import { healthRoutes } from "./routes/health.js";
+import { adminBriefRoutes } from "./routes/admin/brief.js";
 import { adminUploadRoutes } from "./routes/admin/upload.js";
 import { metricsRoutes } from "./routes/metrics.js";
 import { merchantsRoutes } from "./routes/merchants.js";
 import { briefRoutes } from "./routes/brief.js";
+import { novaRoutes } from "./routes/nova.js";
 
 const app = Fastify({ logger: true });
 
@@ -30,9 +32,11 @@ async function start() {
 
   await app.register(healthRoutes, { prefix: "/health" });
   await app.register(adminUploadRoutes, { prefix: "/admin" });
+  await app.register(adminBriefRoutes, { prefix: "/admin" });
   await app.register(metricsRoutes, { prefix: "/metrics" });
   await app.register(merchantsRoutes, { prefix: "/merchants" });
   await app.register(briefRoutes, { prefix: "/brief" });
+  await app.register(novaRoutes, { prefix: "/nova" });
 
   try {
     await app.listen({ port: config.port, host: config.host });

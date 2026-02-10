@@ -59,6 +59,46 @@ export interface BriefResponse {
   placeholder: boolean;
 }
 
+/**
+ * Upsert a monthly brief (Nova-generated). Used by admin brief generation.
+ */
+export interface UpsertBriefInput {
+  month: MonthDate;
+  created_by: string;
+  headline_gross_billed: number | null;
+  mom_delta: number | null;
+  mom_delta_pct: number | null;
+  brief_markdown: string;
+  evidence_links?: unknown;
+  flags?: unknown;
+}
+
+export async function upsertBrief(
+  supabase: SupabaseClient,
+  input: UpsertBriefInput
+): Promise<MonthlyBriefRow> {
+  const m = toMonthDate(input.month);
+  const { data, error } = await supabase
+    .from("monthly_briefs")
+    .upsert(
+      {
+        month: m,
+        created_by: input.created_by,
+        headline_gross_billed: input.headline_gross_billed,
+        mom_delta: input.mom_delta,
+        mom_delta_pct: input.mom_delta_pct,
+        brief_markdown: input.brief_markdown,
+        evidence_links: input.evidence_links ?? null,
+        flags: input.flags ?? null,
+      },
+      { onConflict: "month" }
+    )
+    .select()
+    .single();
+  if (error) throw error;
+  return data as MonthlyBriefRow;
+}
+
 export function toBriefResponse(row: MonthlyBriefRow | null, month: MonthDate): BriefResponse {
   if (!row) {
     return {

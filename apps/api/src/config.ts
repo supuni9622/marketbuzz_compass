@@ -22,4 +22,8 @@ export const config = {
   cognitoUserPoolId: process.env.COGNITO_USER_POOL_ID ?? "",
   cognitoClientId: process.env.COGNITO_CLIENT_ID ?? "",
   cognitoRegion: process.env.COGNITO_REGION ?? process.env.AWS_REGION ?? "us-east-1",
+  // Nova (Phase 1)
+  openaiApiKey: process.env.OPENAI_API_KEY ?? "",
+  /** Path to memory markdown files (repo /memory or S3-backed later). */
+  memoryPath: process.env.MEMORY_PATH ?? "",
 };
