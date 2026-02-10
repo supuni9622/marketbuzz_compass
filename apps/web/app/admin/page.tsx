@@ -64,7 +64,7 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50/70">
+    <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80">
       <h1 className="text-2xl font-bold text-slate-800">Admin</h1>
       <p className="mt-2 text-slate-600">Upload Clover CSV to run ingestion.</p>
 

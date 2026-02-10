@@ -74,7 +74,7 @@ export default function GrowthPlanPage() {
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
   return (
-    <main className="min-h-screen bg-slate-50/70">
+    <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80">
       <AppHeader />
       <div className="mx-auto max-w-2xl px-4 py-6">
         <h1 className="text-xl font-semibold text-slate-800">Growth Plan</h1>

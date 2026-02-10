@@ -113,7 +113,7 @@ export default function AskMarketBuzzPage() {
     : { hidden: { opacity: 0, scale: 0.96 }, visible: { opacity: 1, scale: 1 } };
 
   return (
-    <main className="min-h-screen bg-slate-50/70">
+    <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80">
       <AppHeader />
       <div className="mx-auto max-w-4xl px-4 py-6">
         <h1 className="text-xl font-semibold text-slate-800">Ask MarketBuzz</h1>
