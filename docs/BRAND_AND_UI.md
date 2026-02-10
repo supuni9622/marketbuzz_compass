@@ -90,6 +90,37 @@ within **30–60 seconds** of opening the app.
 
 ---
 
+## Interactive UI Principles
+
+The UI must feel **interactive and story-led**, not a static dashboard. Apply these principles so the first implementation is clearly interactive.
+
+### Do
+
+- **Progressive disclosure** — Don’t show everything at once. One clear story at a time; details on demand (e.g. “Show evidence”, “See who”, “Drill into app”).
+- **Narrative as the spine** — The brief text drives the flow. Numbers and charts **support** the story (e.g. “Gross billed dropped 5%” → click to see the chart; “12 At Risk merchants” → click to open the list).
+- **Contextual actions** — From the brief or a scorecard, one click to the right list (At Risk, Lost, Refunds) with filters pre-filled, or “Export this list”, “Copy link”.
+- **Filters drive the story** — Changing Month / Compare / App **immediately** updates narrative, KPIs, and tables (no “Apply” if possible). URL reflects state so links are shareable.
+- **Inline “Who?” / “See list”** — In the narrative or next to a number: “12 merchants at risk” with a link “See who” that opens the merchants list filtered to At Risk.
+- **Scorecards that expand** — KPI strip or scorecards are tappable/clickable → expand into sparkline, breakdown, or “View list”.
+- **Deep links** — “Copy link” / share link that opens the Brief with that month, compare, and app. Makes the Brief a shareable story.
+- **Loading and empty states** — Skeleton or brief message for “Summary pending — Nova coming soon” and for tables; small transitions when data loads.
+
+### Avoid
+
+- One big page with every chart and table visible at once.
+- Charts that aren’t tied to a specific claim or question.
+- Tables that feel like data dumps with no “See who”, “Export”, or “Why this number?”
+- Filters that require “Apply” and don’t update the narrative/KPIs immediately.
+- Purely decorative motion; keep motion purposeful (expand, loading, highlight).
+
+### First implementation focus
+
+- **One interactive flow:** KPI strip + short narrative block; each KPI or “At Risk”/“Lost” mention is clickable and either expands a small proof (sparkline/table) or opens the merchants list with the right filters.
+- **Filters drive the story:** Month + Compare in the bar; on change, refetch KPIs and brief and re-render so it feels like the app is “answering” for that comparison.
+- **Placeholder still interactive:** Even when the brief is “Summary pending — Nova coming soon”, the strip and “See At Risk / Lost” (or similar) can already work and open the right lists.
+
+---
+
 ## Primary UI Structure
 
 ### 1. Monthly Brief (Default Landing)

@@ -8,6 +8,7 @@ import { healthRoutes } from "./routes/health.js";
 import { adminUploadRoutes } from "./routes/admin/upload.js";
 import { metricsRoutes } from "./routes/metrics.js";
 import { merchantsRoutes } from "./routes/merchants.js";
+import { briefRoutes } from "./routes/brief.js";
 
 const app = Fastify({ logger: true });
 
@@ -31,6 +32,7 @@ async function start() {
   await app.register(adminUploadRoutes, { prefix: "/admin" });
   await app.register(metricsRoutes, { prefix: "/metrics" });
   await app.register(merchantsRoutes, { prefix: "/merchants" });
+  await app.register(briefRoutes, { prefix: "/brief" });
 
   try {
     await app.listen({ port: config.port, host: config.host });

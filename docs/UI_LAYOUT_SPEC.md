@@ -13,6 +13,8 @@ includes Next Month Growth Plan generator (target % → plan)
 
 Rule: Agent narrates → charts prove → tables enable action.
 
+**Interactive UI:** The UI must feel interactive and story-led, not a static dashboard. See **BRAND_AND_UI.md** § Interactive UI Principles (progressive disclosure, narrative as spine, contextual “See who” / “View list”, filters drive the story, deep links).
+
 1) Global UX Rules
 1.1 Global Filters (sticky top bar)
 

@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-02-10  
 **Current phase:** MVP  
-**Status:** Day 3 complete — ingestion pipeline working; Clover billing status lifecycle documented; next: MVP metrics endpoints, merchant list, brief placeholder, then frontend auth + Monthly Brief
+**Status:** Backend complete (metrics, merchants, brief). Frontend started: Nova avatar + narrative block on home; Monthly Brief section with placeholder. Next: Cognito auth, global filters, KPI strip, wire APIs (GET /metrics/kpis, GET /brief, GET /merchants/lifecycle), then Action Center tables and Admin CSV upload.
 
 ---
 
@@ -45,7 +45,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] Lambda ingestion worker (init fix, role-only credentials, ONHOLD enum; pipeline running)
 - [x] Metrics endpoints (KPIs, MoM compare: current, compare, delta, delta_pct)
 - [x] Merchant list endpoints (paginated)
-- [ ] Brief endpoint (placeholder narrative)
+- [x] Brief endpoint (placeholder narrative)
 
 ### 5. Ingestion Pipeline
 - [x] CSV parser (Clover schema)
@@ -57,13 +57,14 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 
 ### 6. Frontend (Next.js)
 - [x] Project scaffold
+- [x] Nova avatar (public: nova_avatar_transparent_bg.png, nova_avatar_with_bg.png; use transparent in narrative block)
+- [x] Monthly Brief section on home (NarrativeBlock + NovaAvatar; placeholder text)
 - [ ] Cognito auth flow (Hosted UI)
 - [ ] Global filters (Year, Month, Compare, App)
-- [ ] Monthly Brief page skeleton
-- [ ] KPI strip (Gross Billed, Active, Refunded)
-- [ ] Narrative placeholder ("Summary pending — Nova coming soon")
+- [ ] KPI strip (Gross Billed, Active, Refunded) — wire GET /metrics/kpis
+- [ ] Narrative from API — wire GET /brief (NarrativeBlock content + placeholder flag)
 - [ ] Scorecards + sparklines
-- [ ] Action Center tables (At Risk, Lost, Refunds, Uninstalls)
+- [ ] Action Center tables (At Risk, Lost, Refunds, Uninstalls) — wire GET /merchants/lifecycle
 - [ ] Pagination, export CSV
 
 ### 7. Admin
@@ -136,6 +137,9 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-10 | MRR & manual outputs doc | docs/MRR_AND_MANUAL_OUTPUTS.md: cadence, MRR definition, manual outputs → canonical tables, two at-risk definitions, most valuable/recurring, performance & cost principles; PRD + AGENTS + DATA_MODEL_SPEC updated |
 | 2026-02-10 | Metrics endpoint GET /metrics/kpis | month (required), compare_month (optional, default prev), app_id (optional); every KPI: current, compare, delta, delta_pct; auth required |
 | 2026-02-10 | Merchant list GET /merchants/lifecycle | month (required), app_id, lifecycle_state (Active/AtRisk/Lost), page, page_size; response: data, page, page_size, total_rows; auth required |
+| 2026-02-10 | Brief endpoint GET /brief | month (required); reads monthly_briefs; placeholder brief_markdown if no row; response includes placeholder flag; auth required |
+| 2026-02-10 | Interactive UI principles | BRAND_AND_UI.md § Interactive UI Principles: progressive disclosure, narrative spine, contextual actions, filters drive story, deep links; first implementation focus; UI_LAYOUT_SPEC pointer |
+| 2026-02-10 | Nova avatar + narrative block | apps/web/public: nova_avatar_transparent_bg.png, nova_avatar_with_bg.png; NovaAvatar.tsx (transparent, 56px); NarrativeBlock.tsx (avatar + content + placeholder); home page Monthly Brief section with NarrativeBlock placeholder |
 
 ---
 
@@ -169,7 +173,9 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - Cognito: complete. See `docs/login_management.md` for user/password setup
 
 ## Handoff for New Context
-When starting a new chat, say: *"Continue MarketBuzz Compass. Day 3 ingestion pipeline is complete (API→SQS→Lambda→Supabase). Next: MVP metrics endpoints, merchant list, brief placeholder, then frontend auth + Monthly Brief. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
+When starting a new chat, paste this:
+
+*"Continue MarketBuzz Compass. Backend is complete: GET /metrics/kpis (current, compare, delta, delta_pct), GET /merchants/lifecycle (paginated), GET /brief (placeholder). Frontend (Next.js, apps/web): home has Monthly Brief section with Nova avatar + NarrativeBlock (placeholder text); Nova avatars in public/ (transparent + with_bg). Next: Cognito auth (Hosted UI), global filters (Month, Compare, App), KPI strip wired to /metrics/kpis, narrative wired to /brief, Action Center tables to /merchants/lifecycle, then Admin CSV upload UI. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
 
 ---
 
