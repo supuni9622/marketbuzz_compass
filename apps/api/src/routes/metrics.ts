@@ -5,7 +5,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { db } from "../db.js";
 import { authMiddleware } from "../auth/middleware.js";
-import { getKpis, getTrend } from "../services/metrics.js";
+import { getKpis, getTrend, getMetricsByApp } from "../services/metrics.js";
 
 export async function metricsRoutes(
   app: FastifyInstance,
@@ -199,6 +199,87 @@ export async function metricsRoutes(
       } catch (err) {
         app.log.error(err);
         return reply.status(500).send({ error: "Failed to fetch trend" });
+      }
+    }
+  );
+
+  app.get(
+    "/by-app",
+    {
+      preHandler: [authMiddleware],
+      schema: {
+        description:
+          "Metrics by app for a month (billed_amount, active_merchants, refunded_amount per app). For Evidence zone charts.",
+        tags: ["Metrics"],
+        querystring: {
+          type: "object",
+          properties: {
+            month: { type: "string", description: "Month (YYYY-MM or YYYY-MM-01)" },
+          },
+          required: ["month"],
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              month: { type: "string" },
+              billed_amount: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    app_id: { type: "string" },
+                    app_name: { type: "string" },
+                    value: { type: "number" },
+                  },
+                },
+              },
+              active_merchants: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    app_id: { type: "string" },
+                    app_name: { type: "string" },
+                    value: { type: "number" },
+                  },
+                },
+              },
+              refunded_amount: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    app_id: { type: "string" },
+                    app_name: { type: "string" },
+                    value: { type: "number" },
+                  },
+                },
+              },
+            },
+          },
+          400: { type: "object", properties: { error: { type: "string" } } },
+          503: { type: "object", properties: { error: { type: "string" } } },
+          500: { type: "object", properties: { error: { type: "string" } } },
+        },
+      },
+    },
+    async (request, reply) => {
+      const q = request.query as { month?: string };
+      const month = q.month?.trim();
+      if (!month) {
+        return reply.status(400).send({ error: "month is required (YYYY-MM or YYYY-MM-01)" });
+      }
+      if (!db.isConfigured()) {
+        return reply.status(503).send({ error: "Database not configured" });
+      }
+      try {
+        const supabase = db.get();
+        const result = await getMetricsByApp(supabase, month);
+        return result;
+      } catch (err) {
+        app.log.error(err);
+        return reply.status(500).send({ error: "Failed to fetch metrics by app" });
       }
     }
   );

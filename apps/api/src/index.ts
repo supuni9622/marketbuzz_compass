@@ -6,6 +6,8 @@ import { config } from "./config.js";
 import { db } from "./db.js";
 import { healthRoutes } from "./routes/health.js";
 import { adminBriefRoutes } from "./routes/admin/brief.js";
+import { adminMemoryRoutes } from "./routes/admin/memory.js";
+import { adminPackagesRoutes } from "./routes/admin/packages.js";
 import { adminUploadRoutes } from "./routes/admin/upload.js";
 import { metricsRoutes } from "./routes/metrics.js";
 import { merchantsRoutes } from "./routes/merchants.js";
@@ -33,6 +35,8 @@ async function start() {
   await app.register(healthRoutes, { prefix: "/health" });
   await app.register(adminUploadRoutes, { prefix: "/admin" });
   await app.register(adminBriefRoutes, { prefix: "/admin" });
+  await app.register(adminPackagesRoutes, { prefix: "/admin" });
+  await app.register(adminMemoryRoutes, { prefix: "/admin" });
   await app.register(metricsRoutes, { prefix: "/metrics" });
   await app.register(merchantsRoutes, { prefix: "/merchants" });
   await app.register(briefRoutes, { prefix: "/brief" });

@@ -60,5 +60,14 @@ export function createApiClient(options: ApiClientOptions) {
         params,
       });
     },
+    patch<T>(path: string, body?: unknown): Promise<T> {
+      return request<T>(path, {
+        method: "PATCH",
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+    },
+    delete(path: string): Promise<void> {
+      return request<void>(path, { method: "DELETE" });
+    },
   };
 }

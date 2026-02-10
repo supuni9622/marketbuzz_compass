@@ -41,7 +41,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link href="/" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
               Brief
             </Link>
-            <span className="text-sm font-medium text-slate-800">Admin</span>
+            <Link href="/admin" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
+              Upload
+            </Link>
+            <Link href="/admin/packages" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
+              Packages
+            </Link>
+            <Link href="/admin/memory" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
+              Memory
+            </Link>
           </nav>
         </div>
       </header>

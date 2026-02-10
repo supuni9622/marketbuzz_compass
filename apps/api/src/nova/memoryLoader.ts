@@ -35,7 +35,7 @@ export function classifyTask(input: {
 }
 
 /** Bundle entries: file paths relative to memory root (no leading slash). */
-const MEMORY_BUNDLES: Record<NovaTaskType, string[]> = {
+export const MEMORY_BUNDLES: Record<NovaTaskType, string[]> = {
   MONTHLY_BRIEF: [
     "definitions/metrics.md",
     "definitions/lifecycle.md",
@@ -91,4 +91,25 @@ export async function loadMemoryBundle(taskType: NovaTaskType): Promise<string> 
 
   if (parts.length === 0) return "";
   return "# Nova memory (task: " + taskType + ")\n\n" + parts.join("\n\n---\n\n");
+}
+
+/** All unique memory file paths (for Admin Memory Manager list). */
+export function getMemoryFileList(): string[] {
+  const set = new Set<string>();
+  for (const files of Object.values(MEMORY_BUNDLES)) {
+    for (const f of files) set.add(f);
+  }
+  return Array.from(set).sort();
+}
+
+/** Read a single memory file by relative path. Returns content or null if missing. */
+export async function readMemoryFile(relPath: string): Promise<string | null> {
+  const root = getMemoryRoot();
+  const safePath = relPath.replace(/\.\./g, "").replace(/^\/+/, "");
+  const filePath = path.join(root, safePath);
+  try {
+    return await readFile(filePath, "utf-8");
+  } catch {
+    return null;
+  }
 }

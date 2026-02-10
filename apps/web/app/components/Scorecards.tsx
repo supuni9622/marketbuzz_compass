@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
 import { TrendSparkline } from "./TrendSparkline";
+import { ByAppBarChart } from "./ByAppBarChart";
 
 interface MetricWithCompare {
   current: number;
@@ -70,6 +72,8 @@ export function Scorecards() {
     },
   });
 
+  const [expandedCard, setExpandedCard] = useState<"billed" | "active" | "refunded" | null>(null);
+
   if (isLoading) {
     return (
       <motion.section
@@ -105,30 +109,43 @@ export function Scorecards() {
   const cardVariants = getCardVariants(reduceMotion ?? false);
   const cards = [
     {
-      key: "billed",
+      key: "billed" as const,
       title: "Gross Billed",
       value: formatCurrency(billed_amount.current),
       delta: billed_amount.delta,
       deltaPct: billed_amount.delta_pct,
       trendMetric: "billed_amount" as const,
+      byAppKey: "billed_amount" as const,
+      formatByApp: formatCurrency,
     },
     {
-      key: "active",
+      key: "active" as const,
       title: "Active Merchants",
       value: formatNumber(active_merchants.current),
       delta: active_merchants.delta,
       deltaPct: active_merchants.delta_pct,
       trendMetric: "active_merchants" as const,
+      byAppKey: "active_merchants" as const,
+      formatByApp: formatNumber,
     },
     {
-      key: "refunded",
+      key: "refunded" as const,
       title: "Refunded",
       value: formatCurrency(refunded_amount.current),
       delta: refunded_amount.delta,
       deltaPct: refunded_amount.delta_pct,
       trendMetric: "refunded_amount" as const,
+      byAppKey: "refunded_amount" as const,
+      formatByApp: formatCurrency,
     },
   ];
+
+  const evidenceVariants = reduceMotion
+    ? { open: { opacity: 1 }, closed: { opacity: 0, height: 0 } }
+    : {
+        open: { opacity: 1, height: "auto" },
+        closed: { opacity: 0, height: 0 },
+      };
 
   return (
     <motion.section
@@ -143,7 +160,7 @@ export function Scorecards() {
       }}
     >
       <h2 className="text-lg font-semibold text-slate-800">Scorecards</h2>
-      <p className="mt-1 text-sm text-slate-500">Last 12 months trend (sparkline)</p>
+      <p className="mt-1 text-sm text-slate-500">Last 12 months trend (sparkline). Expand for by-app breakdown.</p>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {cards.map((card, i) => (
           <motion.div
@@ -158,6 +175,31 @@ export function Scorecards() {
               <DeltaBadge delta={card.delta} deltaPct={card.deltaPct} />
             </p>
             <TrendSparkline metric={card.trendMetric} monthsBack={12} />
+            <button
+              type="button"
+              onClick={() => setExpandedCard((c) => (c === card.key ? null : card.key))}
+              className="mt-2 text-sm font-medium text-teal-600 hover:text-teal-700 hover:underline"
+            >
+              {expandedCard === card.key ? "Hide evidence" : "Show evidence"}
+            </button>
+            <AnimatePresence initial={false}>
+              {expandedCard === card.key && (
+                <motion.div
+                  initial="closed"
+                  animate="open"
+                  exit="closed"
+                  variants={evidenceVariants}
+                  transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
+                  className="overflow-hidden border-t border-slate-100 pt-3"
+                >
+                  <ByAppBarChart
+                    month={data.month}
+                    metricKey={card.byAppKey}
+                    formatValue={card.formatByApp}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         ))}
       </div>

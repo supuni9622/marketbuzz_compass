@@ -189,3 +189,65 @@ export async function getTrend(
     points,
   };
 }
+
+export interface ByAppRow {
+  app_id: string;
+  app_name: string;
+  value: number;
+}
+
+export interface MetricsByAppResponse {
+  month: MonthDate;
+  billed_amount: ByAppRow[];
+  active_merchants: ByAppRow[];
+  refunded_amount: ByAppRow[];
+}
+
+/**
+ * Get metrics by app for a month (for Evidence zone charts).
+ */
+export async function getMetricsByApp(
+  supabase: SupabaseClient,
+  month: MonthDate
+): Promise<MetricsByAppResponse> {
+  const m = toMonthDate(month);
+
+  const { data: mrlRows, error: mrlError } = await supabase
+    .from("monthly_revenue_lifecycle")
+    .select("app_id, app_name, billed_amount, refunded_amount")
+    .eq("month", m);
+  if (mrlError) throw mrlError;
+
+  const billed_amount: ByAppRow[] = (mrlRows ?? []).map((r: { app_id: string; app_name: string; billed_amount: number }) => ({
+    app_id: r.app_id,
+    app_name: r.app_name ?? r.app_id,
+    value: Number(r.billed_amount ?? 0),
+  }));
+  const refunded_amount: ByAppRow[] = (mrlRows ?? []).map((r: { app_id: string; app_name: string; refunded_amount: number }) => ({
+    app_id: r.app_id,
+    app_name: r.app_name ?? r.app_id,
+    value: Number(r.refunded_amount ?? 0),
+  }));
+
+  const { data: activeRows, error: activeError } = await supabase
+    .from("merchant_lifecycle_monthly")
+    .select("app_id, app_name")
+    .eq("month", m)
+    .eq("lifecycle_state", "Active");
+  if (activeError) throw activeError;
+
+  const countByApp = new Map<string, { app_name: string; count: number }>();
+  for (const r of (activeRows ?? []) as { app_id: string; app_name: string }[]) {
+    const key = r.app_id;
+    const cur = countByApp.get(key) ?? { app_name: r.app_name ?? r.app_id, count: 0 };
+    cur.count += 1;
+    countByApp.set(key, cur);
+  }
+  const active_merchants: ByAppRow[] = Array.from(countByApp.entries()).map(([app_id, { app_name, count }]) => ({
+    app_id,
+    app_name,
+    value: count,
+  }));
+
+  return { month: m, billed_amount, active_merchants, refunded_amount };
+}
