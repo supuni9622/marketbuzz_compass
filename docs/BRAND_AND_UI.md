@@ -121,6 +121,23 @@ The UI must feel **interactive and story-led**, not a static dashboard. Apply th
 
 ---
 
+## Theme
+
+**Vibe:** Professional, calm, trustworthy — revenue analyst, not corporate gray.
+
+| Element | Value | Use |
+|--------|--------|-----|
+| **Accent** | Teal (e.g. `#0d9488` / Tailwind `teal-600`) | Primary actions, links, Nova accent, key highlights. |
+| **Neutrals** | Slate/stone (e.g. `slate-700` text, `stone-100` surfaces) | Body text, borders, cards. |
+| **Semantic** | Green = positive/growth; amber = at-risk/warning; red = loss/alert | Deltas, lifecycle, alerts (Interpret. Guide. Plan. **Warn.**). |
+| **Background** | Off-white / very light gray (e.g. `#fafafa` / `slate-50`) | Page and narrative block. |
+| **Typography** | Clear sans (Inter, Geist, or system-ui) | Readable for numbers and narrative. |
+| **Mode** | Light first; dark optional later | Keeps implementation and tone calm. |
+
+Use CSS variables or design tokens so theme stays consistent across the app.
+
+---
+
 ## Primary UI Structure
 
 ### 1. Monthly Brief (Default Landing)
@@ -228,6 +245,19 @@ Rules:
 
 Nova is a **guide**, not a distraction.
 
+### Nova Animations
+
+All Nova motion is **purposeful** — no looping bounces or constant motion. Respect `prefers-reduced-motion`: reduce or disable non-essential animation when the user prefers reduced motion.
+
+| Animation | When | How |
+|-----------|------|-----|
+| **Entrance** | When the narrative block (or Nova) first appears | Short fade-in or soft scale-in (200–300 ms). |
+| **Idle** | When Nova is visible but not "speaking" | Very subtle: e.g. very slow, tiny opacity or position shift, or a single slow blink. Easy to disable if distracting. |
+| **Nova is updating** | When brief/narrative is loading or refetching | Gentle pulse or a small activity indicator near the avatar (not the whole avatar bouncing). |
+| **New content** | When new narrative text replaces placeholder | Brief highlight or fade on the text block; no big avatar motion. |
+
+**Avoid:** Looping bounces, constant movement, mascot-style wiggles. Nova stays calm and professional.
+
 ---
 
 ## What This File Guarantees
@@ -241,7 +271,9 @@ By following this spec:
 This file is the **single source of truth** for:
 - naming
 - tone
+- theme (accent teal, neutrals, semantic colors, typography)
 - UI philosophy
+- Nova avatar and animations
 - agent behavior expectations
 
 ---

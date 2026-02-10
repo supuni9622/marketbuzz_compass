@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-02-10  
 **Current phase:** MVP  
-**Status:** Backend complete (metrics, merchants, brief). Frontend started: Nova avatar + narrative block on home; Monthly Brief section with placeholder. Next: Cognito auth, global filters, KPI strip, wire APIs (GET /metrics/kpis, GET /brief, GET /merchants/lifecycle), then Action Center tables and Admin CSV upload.
+**Status:** MVP frontend implemented: Cognito Hosted UI (PKCE), global filters (Month, Compare, App), KPI strip wired to GET /metrics/kpis, narrative wired to GET /brief, Action Center tables (At Risk, Lost) wired to GET /merchants/lifecycle, Admin CSV upload UI with route guard. Theme: teal accent, slate neutrals, semantic colors. Next: scorecards/sparklines, Refunds/Uninstalls tables when API added, upload status display, Nova animations (entrance, idle, updating, new content).
 
 ---
 
@@ -59,17 +59,18 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] Project scaffold
 - [x] Nova avatar (public: nova_avatar_transparent_bg.png, nova_avatar_with_bg.png; use transparent in narrative block)
 - [x] Monthly Brief section on home (NarrativeBlock + NovaAvatar; placeholder text)
-- [ ] Cognito auth flow (Hosted UI)
-- [ ] Global filters (Year, Month, Compare, App)
-- [ ] KPI strip (Gross Billed, Active, Refunded) — wire GET /metrics/kpis
-- [ ] Narrative from API — wire GET /brief (NarrativeBlock content + placeholder flag)
+- [x] Cognito auth flow (Hosted UI, PKCE, /login, /auth/callback)
+- [x] Global filters (Month, Compare, App) — URL state, sticky bar
+- [x] KPI strip (Gross Billed, Active, Refunded) — wire GET /metrics/kpis
+- [x] Narrative from API — wire GET /brief (NarrativeBlock content + placeholder flag)
 - [ ] Scorecards + sparklines
-- [ ] Action Center tables (At Risk, Lost, Refunds, Uninstalls) — wire GET /merchants/lifecycle
-- [ ] Pagination, export CSV
+- [x] Action Center tables (At Risk, Lost) — wire GET /merchants/lifecycle; pagination
+- [ ] Refunds/Uninstalls tables (when API endpoints added)
+- [ ] Export CSV
 
 ### 7. Admin
-- [ ] Admin route guard
-- [ ] CSV upload UI
+- [x] Admin route guard (layout checks isAdmin)
+- [x] CSV upload UI (POST /admin/upload/csv)
 - [ ] Upload status display
 
 ---
@@ -140,6 +141,10 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-10 | Brief endpoint GET /brief | month (required); reads monthly_briefs; placeholder brief_markdown if no row; response includes placeholder flag; auth required |
 | 2026-02-10 | Interactive UI principles | BRAND_AND_UI.md § Interactive UI Principles: progressive disclosure, narrative spine, contextual actions, filters drive story, deep links; first implementation focus; UI_LAYOUT_SPEC pointer |
 | 2026-02-10 | Nova avatar + narrative block | apps/web/public: nova_avatar_transparent_bg.png, nova_avatar_with_bg.png; NovaAvatar.tsx (transparent, 56px); NarrativeBlock.tsx (avatar + content + placeholder); home page Monthly Brief section with NarrativeBlock placeholder |
+| 2026-02-10 | Theme + Nova animations in BRAND_AND_UI | Theme section: teal accent (#0d9488/teal-600), neutrals, semantic colors (green/amber/red), background, typography, light first. Nova Animations subsection: entrance, idle, "Nova is updating", new content; purposeful only; prefers-reduced-motion. Single source of truth updated. |
+| 2026-02-10 | Cognito auth (Hosted UI) | apps/web: PKCE flow, /login redirect to Cognito, /auth/callback exchange code, sessionStorage token; AuthProvider, AuthGuard; API client with Bearer token; .env.example NEXT_PUBLIC_COGNITO_DOMAIN, NEXT_PUBLIC_COGNITO_CLIENT_ID, NEXT_PUBLIC_API_URL. |
+| 2026-02-10 | Global filters + KPI + Brief + Action Center | GlobalFilters (Month, Compare, App) with URL state; KpiStrip → GET /metrics/kpis; BriefSection → GET /brief; ActionCenterTables (At Risk, Lost) → GET /merchants/lifecycle with pagination; useFilters, useApiClient. |
+| 2026-02-10 | Admin CSV upload UI | Admin layout (isAdmin guard), Admin page with file input and POST /admin/upload/csv; success/error feedback. Theme: teal accent, slate neutrals, semantic green/amber/red in KPI strip and tables. |
 
 ---
 
@@ -175,7 +180,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 ## Handoff for New Context
 When starting a new chat, paste this:
 
-*"Continue MarketBuzz Compass. Backend is complete: GET /metrics/kpis (current, compare, delta, delta_pct), GET /merchants/lifecycle (paginated), GET /brief (placeholder). Frontend (Next.js, apps/web): home has Monthly Brief section with Nova avatar + NarrativeBlock (placeholder text); Nova avatars in public/ (transparent + with_bg). Next: Cognito auth (Hosted UI), global filters (Month, Compare, App), KPI strip wired to /metrics/kpis, narrative wired to /brief, Action Center tables to /merchants/lifecycle, then Admin CSV upload UI. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
+*"Continue MarketBuzz Compass. Backend: GET /metrics/kpis, GET /merchants/lifecycle (paginated), GET /brief (placeholder), POST /admin/upload/csv. Frontend (Next.js, apps/web): Cognito Hosted UI (PKCE), global filters (Month, Compare, App) with URL state, KPI strip → /metrics/kpis, narrative → GET /brief, Action Center tables (At Risk, Lost) → /merchants/lifecycle, Admin CSV upload UI with route guard. Theme: teal accent, slate neutrals, semantic colors. Next: scorecards/sparklines, Refunds/Uninstalls tables when API added, upload status display, Nova animations (BRAND_AND_UI.md). Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
 
 ---
 
