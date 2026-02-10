@@ -1,8 +1,8 @@
 # MarketBuzz Compass — Progress Tracker
 
 **Last updated:** 2026-02-10  
-**Current phase:** Phase 1 Full UI + optional features done  
-**Status:** Ask MarketBuzz chat, Growth Plan wizard, App tabs, Framer Motion, trend sparklines, Evidence zone (by-app breakdown), Admin Packages UI, Admin Memory UI. Run `pnpm install` for framer-motion.  
+**Current phase:** Phase 1 complete (Full UI + optional + proactive brief)  
+**Status:** MVP + Nova + Ask MarketBuzz, Growth Plan, App tabs, Framer Motion, trend sparklines, Evidence zone, Admin Packages/Memory, proactive brief (after upload + scheduled). Run `pnpm install` for framer-motion.  
 **Next task:** Deployment.
 
 ### What's done
@@ -12,10 +12,12 @@
 - **UI polish:** Framer Motion (framer-motion in web package; entrance on home sections + Scorecards stagger; useReducedMotion); GET /metrics/trend (billed_amount, active_merchants, refunded_amount); TrendSparkline component; Scorecards use 12-month trend sparklines.
 - **Proactive brief trigger:** (A) After upload: pipeline calls Nova brief after recompute and updates ingestion_runs.nova_status. (B) Scheduled: internal auth (X-Internal-Brief-Key); Lambda scheduledBrief.ts + EventBridge cron(0 2 1 * ? *); doc scheduled-brief-lambda-eventbridge.md.
 - **Optional done:** Admin Memory Manager (GET /admin/memory/list, GET /admin/memory/content; Admin Memory page — list by category, view content); Package catalog CRUD (backend GET/POST/PATCH/DELETE /admin/packages; Admin Packages page — list, add, edit, delete); Evidence zone (GET /metrics/by-app; Scorecards “Show evidence” expand with by-app bar chart + AnimatePresence; useReducedMotion); API client patch/delete; Admin layout nav (Upload, Packages, Memory).
-- **Docs:** Nova architecture article — `docs/articles/nova-architecture-and-business-value.md`; README table updated.
+- **Docs:** Nova architecture (`docs/articles/nova-architecture-and-business-value.md`); proactive brief trigger architecture (`docs/articles/proactive-brief-trigger-architecture.md`); scheduled brief setup (`docs/articles/scheduled-brief-lambda-eventbridge.md`); docs/articles/README.md table updated.
 
 ### What's remaining
-- **Deployment:** API → Lambda + API Gateway; Worker → Lambda (SQS); Nova → Lambda; Web → Vercel/Amplify; prod DB (RDS or Supabase).
+
+- **Deployment:** API → Lambda + API Gateway; ingestion Worker → Lambda (SQS); optional scheduled-brief Lambda + EventBridge; Web → Vercel/Amplify; prod DB (RDS or Supabase).
+- **Optional setup:** Create scheduled-brief Lambda and EventBridge rule per `docs/articles/scheduled-brief-lambda-eventbridge.md` (API_URL, INTERNAL_BRIEF_API_KEY in Lambda env).
 ---
 
 ## Phase: MVP (First Release)
@@ -109,9 +111,16 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] GET /metrics/trend + TrendSparkline on Scorecards (12-month sparklines)
 - [x] Evidence zone (GET /metrics/by-app; Scorecards “Show evidence” → by-app bar chart; AnimatePresence)
 
+### 9b. Proactive brief trigger
+- [x] After upload: pipeline calls runNovaProactiveBrief + upsertBrief after recompute; ingestion_runs.nova_status (success/failure)
+- [x] Internal auth: requireAdminOrInternalBriefKey; X-Internal-Brief-Key or Bearer; POST /admin/brief/generate accepts Admin JWT or internal key
+- [x] Scheduled: Lambda scheduledBrief.ts (previous month); EventBridge cron(0 2 1 * ? *); doc scheduled-brief-lambda-eventbridge.md
+- [x] Docs: proactive-brief-trigger-architecture.md (after upload + scheduled, shared endpoint, Mermaid diagrams)
+
 ### 10. Deployment
 - [ ] API → Lambda + API Gateway
 - [ ] Worker → Lambda (SQS)
+- [ ] Optional: scheduled-brief Lambda + EventBridge (see docs/articles/scheduled-brief-lambda-eventbridge.md)
 - [ ] Nova → Lambda
 - [ ] Web → Vercel/Amplify
 - [ ] RDS (prod) or Supabase (if staying)
@@ -179,6 +188,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-10 | Optional: Admin Memory UI | Admin Memory page (GET /admin/memory/list, /content; list by category, view file content). |
 | 2026-02-10 | Optional: Evidence zone | GET /metrics/by-app (billed_amount, active_merchants, refunded_amount by app); ByAppBarChart; Scorecards “Show evidence” expand with by-app chart; AnimatePresence + useReducedMotion. |
 | 2026-02-10 | Proactive brief trigger | (A) After upload: pipeline runNovaProactiveBrief + upsertBrief; nova_status. (B) Scheduled: INTERNAL_BRIEF_API_KEY; requireAdminOrInternalBriefKey; Lambda scheduledBrief.ts + EventBridge; doc scheduled-brief-lambda-eventbridge.md. |
+| 2026-02-10 | Proactive brief architecture article | docs/articles/proactive-brief-trigger-architecture.md — after upload + scheduled, shared endpoint, internal auth, month selection, Mermaid diagrams; added to docs/articles/README.md. |
 
 ---
 
@@ -214,7 +224,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 ## Handoff for New Context
 When starting a new chat, paste this:
 
-*"Continue MarketBuzz Compass. Backend: GET /metrics/kpis, GET /metrics/trend, GET /metrics/by-app, GET /merchants/lifecycle, GET /merchants/refunds, GET /merchants/uninstalls (paginated), GET /brief, POST /nova/chat, POST /nova/growth-plan, POST /admin/brief/generate (Admin or X-Internal-Brief-Key), POST /admin/upload/csv, GET /admin/uploads, GET/POST/PATCH/DELETE /admin/packages, GET /admin/memory/list, GET /admin/memory/content. Frontend: Cognito Hosted UI (PKCE), global filters + Copy link, App tabs, KPI strip, narrative, Scorecards (12-month sparklines + Evidence zone “Show evidence” by-app chart), Action Center (At Risk, Lost, Refunds, Uninstalls) with Export CSV, /ask (Ask MarketBuzz chat), /growth-plan (wizard), Admin upload + status, Admin Packages (/admin/packages), Admin Memory (/admin/memory), Framer Motion (entrance, Evidence expand/collapse, useReducedMotion). Phase 1 Full UI + optional done. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md @docs/AGENT_SPEC.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web. Run pnpm install for framer-motion."*
+*"Continue MarketBuzz Compass. Backend: GET /metrics/kpis, GET /metrics/trend, GET /metrics/by-app, GET /merchants/lifecycle, GET /merchants/refunds, GET /merchants/uninstalls (paginated), GET /brief, POST /nova/chat, POST /nova/growth-plan, POST /admin/brief/generate (Admin or X-Internal-Brief-Key), POST /admin/upload/csv, GET /admin/uploads, GET/POST/PATCH/DELETE /admin/packages, GET /admin/memory/list, GET /admin/memory/content. Frontend: Cognito Hosted UI (PKCE), global filters + Copy link, App tabs, KPI strip, narrative, Scorecards (12-month sparklines + Evidence zone “Show evidence” by-app chart), Action Center (At Risk, Lost, Refunds, Uninstalls) with Export CSV, /ask (Ask MarketBuzz chat), /growth-plan (wizard), Admin upload + status, Admin Packages (/admin/packages), Admin Memory (/admin/memory), Framer Motion (entrance, Evidence expand/collapse, useReducedMotion). Phase 1 complete (Full UI + optional + proactive brief: after upload + scheduled). Docs: proactive-brief-trigger-architecture.md, scheduled-brief-lambda-eventbridge.md. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md @docs/AGENT_SPEC.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web. Run pnpm install for framer-motion."*
 
 ---
 
