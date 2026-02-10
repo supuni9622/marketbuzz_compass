@@ -14,8 +14,8 @@ function adminNavItemClass(href: string, pathname: string) {
         : pathname.startsWith(href);
   return `rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
     isActive
-      ? "bg-teal-100 text-teal-800"
-      : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+      ? "bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-200"
+      : "text-slate-600 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
   }`;
 }
 
@@ -48,9 +48,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <header className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-teal-600 transition-colors hover:text-teal-700">
+          <Link href="/" className="text-xl font-bold text-teal-600 transition-colors hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300">
             MarketBuzz Compass
           </Link>
           <nav className="flex items-center gap-1" aria-label="Admin">

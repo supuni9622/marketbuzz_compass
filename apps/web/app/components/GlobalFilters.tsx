@@ -63,7 +63,7 @@ function FilterDropdown({
 
   return (
     <div ref={ref} className="relative">
-      <label htmlFor={id} className="text-sm font-medium text-slate-600">
+      <label htmlFor={id} className="text-sm font-medium text-slate-600 dark:text-slate-400">
         {label}
       </label>
       <button
@@ -73,11 +73,11 @@ function FilterDropdown({
         aria-expanded={open}
         aria-label={label}
         onClick={() => setOpen((o) => !o)}
-        className="mt-0.5 flex min-w-[7rem] items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-800 shadow-sm transition-colors hover:border-teal-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+        className="mt-0.5 flex min-w-[7rem] items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-800 shadow-sm transition-colors hover:border-teal-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:border-teal-500"
       >
         <span className="truncate">{displayLabel}</span>
         <svg
-          className={`h-4 w-4 flex-shrink-0 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 flex-shrink-0 text-slate-500 transition-transform dark:text-slate-400 ${open ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -89,7 +89,7 @@ function FilterDropdown({
       {open && (
         <ul
           role="listbox"
-          className={`absolute left-0 top-full z-50 mt-1 w-full min-w-[10rem] overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg ${maxHeight}`}
+          className={`absolute left-0 top-full z-50 mt-1 w-full min-w-[10rem] overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-800 ${maxHeight}`}
           aria-label={label}
         >
           {options.map((o) => {
@@ -104,8 +104,8 @@ function FilterDropdown({
                   }}
                   className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                     isSelected
-                      ? "bg-teal-50 font-medium text-teal-800"
-                      : "text-slate-700 hover:bg-slate-50"
+                      ? "bg-teal-50 font-medium text-teal-800 dark:bg-teal-900/50 dark:text-teal-200"
+                      : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700"
                   }`}
                 >
                   {o.label}
@@ -163,7 +163,7 @@ export function GlobalFilters() {
   ];
 
   return (
-    <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
+    <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
       <div className="mx-auto flex max-w-6xl flex-wrap items-end gap-4">
         <FilterDropdown
           id="filter-month"
@@ -191,7 +191,7 @@ export function GlobalFilters() {
           <button
             type="button"
             onClick={copyLink}
-            className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+            className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:bg-teal-500 dark:hover:bg-teal-600 dark:focus:ring-offset-slate-800"
             title="Copy link to this view (current filters)"
           >
             {copyFeedback ? "Copied!" : "Copy link"}

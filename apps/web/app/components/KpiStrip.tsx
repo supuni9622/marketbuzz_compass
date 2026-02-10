@@ -35,9 +35,9 @@ function DeltaBadge({ delta, deltaPct }: { delta: number; deltaPct: number | nul
   const pctStr = deltaPct != null ? `${isPositive ? "+" : ""}${deltaPct}%` : "";
 
   if (isZero) {
-    return <span className="text-slate-500">—</span>;
+    return <span className="text-slate-500 dark:text-slate-400">—</span>;
   }
-  const colorClass = isPositive ? "text-emerald-600" : "text-red-600";
+  const colorClass = isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
   return (
     <span className={colorClass}>
       {isPositive ? "+" : ""}
@@ -63,7 +63,7 @@ export function KpiStrip() {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="KPI strip loading">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-xl border border-slate-200 bg-slate-100 shadow-sm" />
+          <div key={i} className="h-24 animate-pulse rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-600 dark:bg-slate-700" />
         ))}
       </div>
     );
@@ -71,7 +71,7 @@ export function KpiStrip() {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700" role="alert">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="alert">
         Failed to load KPIs. {error instanceof Error ? error.message : "Unknown error."}
       </div>
     );
@@ -83,23 +83,23 @@ export function KpiStrip() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="KPI strip">
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg">
-        <p className="text-sm font-medium text-slate-600">Gross Billed</p>
-        <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(billed_amount.current)}</p>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Gross Billed</p>
+        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(billed_amount.current)}</p>
         <p className="mt-1 text-sm">
           <DeltaBadge delta={billed_amount.delta} deltaPct={billed_amount.delta_pct} />
         </p>
       </div>
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg">
-        <p className="text-sm font-medium text-slate-600">Active Merchants</p>
-        <p className="mt-1 text-2xl font-semibold text-slate-900">{formatNumber(active_merchants.current)}</p>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Active Merchants</p>
+        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatNumber(active_merchants.current)}</p>
         <p className="mt-1 text-sm">
           <DeltaBadge delta={active_merchants.delta} deltaPct={active_merchants.delta_pct} />
         </p>
       </div>
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg">
-        <p className="text-sm font-medium text-slate-600">Refunded</p>
-        <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(refunded_amount.current)}</p>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Refunded</p>
+        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(refunded_amount.current)}</p>
         <p className="mt-1 text-sm">
           <DeltaBadge delta={refunded_amount.delta} deltaPct={refunded_amount.delta_pct} />
         </p>

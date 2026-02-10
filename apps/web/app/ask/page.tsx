@@ -113,18 +113,18 @@ export default function AskNovaPage() {
     : { hidden: { opacity: 0, scale: 0.96 }, visible: { opacity: 1, scale: 1 } };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80">
+    <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80 dark:from-slate-900 dark:to-slate-900">
       <AppHeader />
       <div className="mx-auto max-w-4xl px-4 py-6">
-        <h1 className="text-xl font-semibold text-slate-800">Ask Nova</h1>
-        <p className="mt-1 text-sm text-slate-600">
+        <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100">Ask Nova</h1>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           Ask Nova about revenue, merchants, or trends. Filters: Month {monthApi || "—"}, Compare{" "}
           {compareMonthApi || "—"}, App {appId || "All"}.
         </p>
 
-        <div className="mt-6 flex flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-md">
+        <div className="mt-6 flex flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-md dark:border-slate-600 dark:bg-slate-800">
           {/* Chat transcript */}
-          <div className="flex max-h-[60vh] min-h-[320px] flex-col overflow-y-auto bg-gradient-to-b from-teal-50/30 to-white p-4">
+          <div className="flex max-h-[60vh] min-h-[320px] flex-col overflow-y-auto bg-gradient-to-b from-teal-50/30 to-white p-4 dark:from-slate-800/80 dark:to-slate-800">
             <AnimatePresence initial={false}>
               {messages.length === 0 && !isLoading && (
                 <motion.div
@@ -138,10 +138,10 @@ export default function AskNovaPage() {
                     <NovaAvatar size={88} withBg className="ring-4 ring-teal-100/80 shadow-lg" />
                   </motion.div>
                   <div className="text-center">
-                    <p className="text-base font-medium text-slate-700">
+                    <p className="text-base font-medium text-slate-700 dark:text-slate-200">
                       Hi, I&apos;m Nova. Your revenue analyst.
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       Ask me about billed amount, active merchants, at-risk, refunds, or trends.
                     </p>
                   </div>
@@ -156,7 +156,7 @@ export default function AskNovaPage() {
                         variants={chipVariants}
                         onClick={() => handleExampleClick(q)}
                         disabled={isLoading}
-                        className="rounded-full border border-teal-200 bg-white px-4 py-2 text-sm text-teal-800 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:shadow focus:outline-none focus:ring-2 focus:ring-teal-500/50 disabled:opacity-50"
+                        className="rounded-full border border-teal-200 bg-white px-4 py-2 text-sm text-teal-800 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:shadow focus:outline-none focus:ring-2 focus:ring-teal-500/50 disabled:opacity-50 dark:border-teal-600 dark:bg-slate-700 dark:text-teal-200 dark:hover:bg-teal-900/30"
                       >
                         {q}
                       </motion.button>
@@ -188,8 +188,8 @@ export default function AskNovaPage() {
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                     msg.role === "user"
-                      ? "bg-teal-600 text-white shadow-sm"
-                      : "border border-teal-100 bg-white/90 text-slate-800 shadow-sm"
+                      ? "bg-teal-600 text-white shadow-sm dark:bg-teal-500"
+                      : "border border-teal-100 bg-white/90 text-slate-800 shadow-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   }`}
                 >
                   <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
@@ -222,7 +222,7 @@ export default function AskNovaPage() {
 
           {error && (
             <div
-              className="border-t border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700"
+              className="border-t border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
               role="alert"
             >
               {error}
@@ -230,7 +230,7 @@ export default function AskNovaPage() {
           )}
 
           {/* Input area */}
-          <div className="border-t border-slate-200 bg-slate-50/50 p-3">
+          <div className="border-t border-slate-200 bg-slate-50/50 p-3 dark:border-slate-600 dark:bg-slate-800/50">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -238,14 +238,14 @@ export default function AskNovaPage() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about revenue, merchants, at risk…"
-                className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder:text-slate-500"
                 disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={() => sendMessage()}
                 disabled={!input.trim() || isLoading}
-                className="rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none"
+                className="rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none dark:bg-teal-500 dark:hover:bg-teal-600 dark:focus:ring-offset-slate-800 dark:disabled:bg-slate-600"
               >
                 Send
               </button>

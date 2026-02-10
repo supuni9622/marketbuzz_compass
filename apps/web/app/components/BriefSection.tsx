@@ -40,7 +40,7 @@ export function BriefSection() {
   if (error) {
     return (
       <section className="mt-6" aria-label="Monthly Brief error">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700" role="alert">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="alert">
           Failed to load brief. {error instanceof Error ? error.message : "Unknown error."}
         </div>
       </section>
@@ -49,7 +49,7 @@ export function BriefSection() {
 
   return (
     <section className="mt-6" aria-label="Monthly Brief">
-      <h2 className="text-lg font-semibold text-slate-800">MarketBuzz Monthly Brief</h2>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">MarketBuzz Monthly Brief</h2>
       <div className="mt-4">
         <NarrativeBlock
           content={content}

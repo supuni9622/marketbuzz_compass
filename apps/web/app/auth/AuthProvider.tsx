@@ -37,7 +37,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const t = storage.getToken();
-    setTokenState(t);
+    const parsed = t ? userFromToken(t) : null;
+    if (t && !parsed) {
+      storage.clearAuth();
+      setTokenState(null);
+    } else {
+      setTokenState(t);
+    }
     setIsLoading(false);
   }, []);
 

@@ -39,8 +39,8 @@ function DeltaBadge({ delta, deltaPct }: { delta: number; deltaPct: number | nul
   const isPositive = delta > 0;
   const isZero = delta === 0;
   const pctStr = deltaPct != null ? `${isPositive ? "+" : ""}${deltaPct}%` : "";
-  if (isZero) return <span className="text-slate-500">—</span>;
-  const colorClass = isPositive ? "text-emerald-600" : "text-red-600";
+  if (isZero) return <span className="text-slate-500 dark:text-slate-400">—</span>;
+  const colorClass = isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
   return <span className={colorClass}>{pctStr}</span>;
 }
 
@@ -82,10 +82,10 @@ export function Scorecards() {
         initial={false}
         animate={{ opacity: 1 }}
       >
-        <h2 className="text-lg font-semibold text-slate-800">Scorecards</h2>
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-lg bg-slate-200" />
+            <div key={i} className="h-32 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" />
           ))}
         </div>
       </motion.section>
@@ -95,8 +95,8 @@ export function Scorecards() {
   if (error) {
     return (
       <section className="mt-8" aria-label="Scorecards error">
-        <h2 className="text-lg font-semibold text-slate-800">Scorecards</h2>
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700" role="alert">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="alert">
           Failed to load. {error instanceof Error ? error.message : "Unknown error."}
         </div>
       </section>
@@ -159,18 +159,18 @@ export function Scorecards() {
         },
       }}
     >
-      <h2 className="text-lg font-semibold text-slate-800">Scorecards</h2>
-      <p className="mt-1 text-sm text-slate-500">Last 12 months trend (sparkline). Expand for by-app breakdown.</p>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Last 12 months trend (sparkline). Expand for by-app breakdown.</p>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {cards.map((card, i) => (
           <motion.div
             key={card.key}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg"
+            className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800"
             variants={cardVariants}
             custom={i}
           >
-            <p className="text-sm font-medium text-slate-600">{card.title}</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{card.value}</p>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{card.title}</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{card.value}</p>
             <p className="mt-1 text-sm">
               <DeltaBadge delta={card.delta} deltaPct={card.deltaPct} />
             </p>
@@ -178,11 +178,11 @@ export function Scorecards() {
             <button
               type="button"
               onClick={() => setExpandedCard((c) => (c === card.key ? null : card.key))}
-              className="mt-2 flex items-center gap-1.5 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-sm font-medium text-teal-700 shadow-sm transition-colors hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+              className="mt-2 flex items-center gap-1.5 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-sm font-medium text-teal-700 shadow-sm transition-colors hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-teal-600 dark:bg-slate-800 dark:text-teal-300 dark:hover:bg-teal-900/30"
             >
               {expandedCard === card.key ? "Hide evidence" : "Show evidence"}
               <svg
-                className={`h-4 w-4 flex-shrink-0 text-teal-600 transition-transform ${expandedCard === card.key ? "rotate-180" : ""}`}
+                className={`h-4 w-4 flex-shrink-0 text-teal-600 transition-transform dark:text-teal-400 ${expandedCard === card.key ? "rotate-180" : ""}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -199,7 +199,7 @@ export function Scorecards() {
                   exit="closed"
                   variants={evidenceVariants}
                   transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
-                  className="overflow-hidden border-t border-slate-100 pt-3"
+                  className="overflow-hidden border-t border-slate-100 pt-3 dark:border-slate-600"
                 >
                   <ByAppBarChart
                     month={data.month}

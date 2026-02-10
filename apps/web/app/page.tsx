@@ -19,8 +19,8 @@ export default function Home() {
   const sectionVariants = reduceMotion ? { hidden: fadeIn.reduced, visible: fadeIn.reduced } : fadeIn;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80">
-      <div className="sticky top-0 z-20 border-b border-slate-200 bg-white shadow-sm">
+    <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80 dark:from-slate-900 dark:to-slate-900">
+      <div className="sticky top-0 z-20 border-b border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <AppHeader />
         <AppTabs />
       </div>

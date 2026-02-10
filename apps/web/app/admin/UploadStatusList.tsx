@@ -66,18 +66,18 @@ export function UploadStatusList() {
 
   if (isLoading) {
     return (
-      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md">
-        <h2 className="text-lg font-semibold text-slate-800">Recent uploads</h2>
-        <div className="mt-4 h-32 animate-pulse rounded-lg bg-slate-100" />
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-600 dark:bg-slate-800">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Recent uploads</h2>
+        <div className="mt-4 h-32 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-700" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md">
-        <h2 className="text-lg font-semibold text-slate-800">Recent uploads</h2>
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-600 dark:bg-slate-800">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Recent uploads</h2>
+        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300" role="alert">
           Failed to load uploads. {error instanceof Error ? error.message : "Unknown error."}
         </div>
       </div>
@@ -87,32 +87,32 @@ export function UploadStatusList() {
   const list = data?.data ?? [];
 
   return (
-    <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md">
-      <h2 className="text-lg font-semibold text-slate-800">Recent uploads</h2>
+    <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-600 dark:bg-slate-800">
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Recent uploads</h2>
       {list.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">No uploads yet.</p>
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">No uploads yet.</p>
       ) : (
-        <div className="mt-4 overflow-x-auto rounded-lg border border-slate-100">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
+        <div className="mt-4 overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-600">
+          <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-600">
+            <thead className="bg-slate-50 dark:bg-slate-700/50">
               <tr>
-                <th className="px-3 py-2 text-left font-medium text-slate-700">Uploaded</th>
-                <th className="px-3 py-2 text-left font-medium text-slate-700">By</th>
-                <th className="px-3 py-2 text-left font-medium text-slate-700">Status</th>
-                <th className="px-3 py-2 text-right font-medium text-slate-700">Rows</th>
-                <th className="px-3 py-2 text-left font-medium text-slate-700">Run</th>
-                <th className="px-3 py-2 text-left font-medium text-slate-700">Recompute</th>
+                <th className="px-3 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Uploaded</th>
+                <th className="px-3 py-2 text-left font-medium text-slate-700 dark:text-slate-300">By</th>
+                <th className="px-3 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Status</th>
+                <th className="px-3 py-2 text-right font-medium text-slate-700 dark:text-slate-300">Rows</th>
+                <th className="px-3 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Run</th>
+                <th className="px-3 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Recompute</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-600">
               {list.map((u) => (
-                <tr key={u.upload_id} className="transition-colors hover:bg-slate-50/80">
-                  <td className="px-3 py-2 text-slate-600">{formatDate(u.uploaded_at)}</td>
-                  <td className="px-3 py-2 text-slate-600">{u.uploaded_by_email ?? "—"}</td>
+                <tr key={u.upload_id} className="transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-700/50">
+                  <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{formatDate(u.uploaded_at)}</td>
+                  <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{u.uploaded_by_email ?? "—"}</td>
                   <td className="px-3 py-2">
                     <StatusBadge status={u.status} />
                   </td>
-                  <td className="px-3 py-2 text-right text-slate-600">{u.rows_received ?? "—"}</td>
+                  <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-400">{u.rows_received ?? "—"}</td>
                   <td className="px-3 py-2">
                     {u.run ? (
                       <span className="text-slate-600">

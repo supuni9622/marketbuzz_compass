@@ -64,15 +64,15 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80">
-      <h1 className="text-2xl font-bold text-slate-800">Admin</h1>
-      <p className="mt-2 text-slate-600">Upload Clover CSV to run ingestion.</p>
+    <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80 dark:from-slate-900 dark:to-slate-900">
+      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Admin</h1>
+      <p className="mt-2 text-slate-600 dark:text-slate-400">Upload Clover CSV to run ingestion.</p>
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md">
-        <h2 className="text-lg font-semibold text-slate-800">Upload CSV</h2>
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-600 dark:bg-slate-800">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Upload CSV</h2>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label htmlFor="csv-file" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="csv-file" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Clover billing CSV
             </label>
             <input
@@ -101,10 +101,10 @@ export default function AdminPage() {
           <div
             className={`mt-4 rounded-md p-3 text-sm ${
               status === "error"
-                ? "bg-red-50 text-red-700"
+                ? "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                 : status === "success"
-                  ? "bg-emerald-50 text-emerald-800"
-                  : "bg-slate-50 text-slate-700"
+                  ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+                  : "bg-slate-50 text-slate-700 dark:bg-slate-700/50 dark:text-slate-300"
             }`}
             role="alert"
           >
@@ -115,8 +115,8 @@ export default function AdminPage() {
 
       <UploadStatusList />
 
-      <p className="mt-6 text-sm text-slate-500">
-        <Link href="/" className="text-teal-600 transition-colors hover:text-teal-700 hover:underline">
+      <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        <Link href="/" className="text-teal-600 transition-colors hover:text-teal-700 hover:underline dark:text-teal-400 dark:hover:text-teal-300">
           ← Back to Brief
         </Link>
       </p>
