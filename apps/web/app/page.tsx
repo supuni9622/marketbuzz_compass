@@ -20,8 +20,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80">
-      <AppHeader />
-      <AppTabs />
+      <div className="sticky top-0 z-20 border-b border-slate-200 bg-white shadow-sm">
+        <AppHeader />
+        <AppTabs />
+      </div>
       <div className="mx-auto max-w-6xl px-4 py-6">
         <motion.div variants={sectionVariants} initial="hidden" animate="visible">
           <KpiStrip />

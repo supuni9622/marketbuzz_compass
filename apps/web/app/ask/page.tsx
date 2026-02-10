@@ -25,7 +25,7 @@ const EXAMPLE_QUESTIONS = [
   "Summarize refunds and uninstalls.",
 ];
 
-export default function AskMarketBuzzPage() {
+export default function AskNovaPage() {
   const api = useApiClient();
   const { monthApi, compareMonthApi, appId } = useFilters();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -116,7 +116,7 @@ export default function AskMarketBuzzPage() {
     <main className="min-h-screen bg-gradient-to-b from-teal-50/50 to-slate-50/80">
       <AppHeader />
       <div className="mx-auto max-w-4xl px-4 py-6">
-        <h1 className="text-xl font-semibold text-slate-800">Ask MarketBuzz</h1>
+        <h1 className="text-xl font-semibold text-slate-800">Ask Nova</h1>
         <p className="mt-1 text-sm text-slate-600">
           Ask Nova about revenue, merchants, or trends. Filters: Month {monthApi || "—"}, Compare{" "}
           {compareMonthApi || "—"}, App {appId || "All"}.

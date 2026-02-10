@@ -178,9 +178,18 @@ export function Scorecards() {
             <button
               type="button"
               onClick={() => setExpandedCard((c) => (c === card.key ? null : card.key))}
-              className="mt-2 text-sm font-medium text-teal-600 transition-colors hover:text-teal-700 hover:underline"
+              className="mt-2 flex items-center gap-1.5 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-sm font-medium text-teal-700 shadow-sm transition-colors hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
             >
               {expandedCard === card.key ? "Hide evidence" : "Show evidence"}
+              <svg
+                className={`h-4 w-4 flex-shrink-0 text-teal-600 transition-transform ${expandedCard === card.key ? "rotate-180" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
             <AnimatePresence initial={false}>
               {expandedCard === card.key && (

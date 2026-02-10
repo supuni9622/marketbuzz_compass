@@ -1,11 +1,27 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/app/auth/AuthProvider";
 import { useEffect } from "react";
 
+function adminNavItemClass(href: string, pathname: string) {
+  const isActive =
+    href === "/"
+      ? pathname === "/"
+      : href === "/admin"
+        ? pathname === "/admin"
+        : pathname.startsWith(href);
+  return `rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+    isActive
+      ? "bg-teal-100 text-teal-800"
+      : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+  }`;
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAdmin, isLoading } = useAuth();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (isLoading) return;
@@ -37,17 +53,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/" className="text-xl font-bold text-teal-600 transition-colors hover:text-teal-700">
             MarketBuzz Compass
           </Link>
-          <nav className="flex gap-4">
-            <Link href="/" className="text-sm text-slate-600 transition-colors hover:text-teal-600 hover:underline">
+          <nav className="flex items-center gap-1" aria-label="Admin">
+            <Link href="/" className={adminNavItemClass("/", pathname)}>
               Brief
             </Link>
-            <Link href="/admin" className="text-sm text-slate-600 transition-colors hover:text-teal-600 hover:underline">
+            <Link href="/admin" className={adminNavItemClass("/admin", pathname)}>
               Upload
             </Link>
-            <Link href="/admin/packages" className="text-sm text-slate-600 transition-colors hover:text-teal-600 hover:underline">
+            <Link href="/admin/packages" className={adminNavItemClass("/admin/packages", pathname)}>
               Packages
             </Link>
-            <Link href="/admin/memory" className="text-sm text-slate-600 transition-colors hover:text-teal-600 hover:underline">
+            <Link href="/admin/memory" className={adminNavItemClass("/admin/memory", pathname)}>
               Memory
             </Link>
           </nav>

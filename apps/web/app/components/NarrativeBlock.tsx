@@ -31,8 +31,11 @@ export function NarrativeBlock({
       <NovaAvatar />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-teal-600">Nova</p>
+        <p className="mt-0.5 text-xs text-slate-500">
+          Your revenue analyst, I watch the numbers so you don&apos;t have to.
+        </p>
         <div
-          className={`mt-1 rounded px-1 py-0.5 whitespace-pre-wrap text-slate-800 ${hasNewContent ? "nova-new-content-block" : ""}`}
+          className={`mt-1.5 rounded px-1 py-0.5 whitespace-pre-wrap text-slate-800 ${hasNewContent ? "nova-new-content-block" : ""}`}
           style={{ fontFamily: "inherit" }}
         >
           {content}

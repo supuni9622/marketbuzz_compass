@@ -7,13 +7,13 @@ import { useAuth } from "@/app/auth/AuthProvider";
 import { UserAvatar } from "./UserAvatar";
 import { GlobalFilters } from "./GlobalFilters";
 
-function navLinkClass(href: string, pathname: string, base = "text-sm font-medium transition-colors") {
+function navItemClass(href: string, pathname: string) {
   const isActive =
     pathname === href || (href !== "/" && pathname.startsWith(href));
-  return `${base} ${
+  return `rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
     isActive
-      ? "text-teal-600 font-semibold underline underline-offset-2"
-      : "text-slate-600 hover:text-teal-600 hover:underline"
+      ? "bg-teal-100 text-teal-800"
+      : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
   }`;
 }
 
@@ -53,21 +53,18 @@ export function AppHeader() {
             MarketBuzz Compass
           </Link>
           <p className="text-base font-medium text-teal-700">Interpret. Guide. Plan. Warn.</p>
-          <nav className="flex items-center gap-5" aria-label="Main">
-            <Link href="/" className={navLinkClass("/", pathname)}>
+          <nav className="flex items-center gap-1" aria-label="Main">
+            <Link href="/" className={navItemClass("/", pathname)}>
               Brief
             </Link>
-            <Link href="/ask" className={navLinkClass("/ask", pathname)}>
-              Ask MarketBuzz
+            <Link href="/ask" className={navItemClass("/ask", pathname)}>
+              Ask Nova
             </Link>
-            <Link href="/growth-plan" className={navLinkClass("/growth-plan", pathname)}>
+            <Link href="/growth-plan" className={navItemClass("/growth-plan", pathname)}>
               Growth Plan
             </Link>
             {isAdmin && (
-              <Link
-                href="/admin"
-                className={navLinkClass("/admin", pathname)}
-              >
+              <Link href="/admin" className={navItemClass("/admin", pathname)}>
                 Admin
               </Link>
             )}
