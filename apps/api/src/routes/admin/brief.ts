@@ -2,7 +2,7 @@
  * Admin brief generation: trigger Nova to generate monthly brief and upsert to monthly_briefs.
  */
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import { authMiddleware, requireAdmin } from "../../auth/middleware.js";
+import { requireAdminOrInternalBriefKey } from "../../auth/middleware.js";
 import { db } from "../../db.js";
 import { config } from "../../config.js";
 import { runNovaProactiveBrief } from "../../nova/agent.js";
@@ -15,7 +15,7 @@ export async function adminBriefRoutes(
   app.post(
     "/brief/generate",
     {
-      preHandler: [authMiddleware, requireAdmin],
+      preHandler: [requireAdminOrInternalBriefKey],
       schema: {
         description:
           "Generate monthly brief via Nova and upsert to monthly_briefs. Admin only.",

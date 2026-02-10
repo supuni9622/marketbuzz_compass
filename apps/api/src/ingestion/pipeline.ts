@@ -1,12 +1,16 @@
 /**
  * Ingestion pipeline orchestrator: fetch CSV → validate → upsert → recompute → audit.
+ * After recompute success, triggers Nova proactive brief and updates ingestion_runs.nova_status.
  * @see docs/INGESTION_WORKFLOW.md
  */
 import { db } from "../db.js";
+import { config } from "../config.js";
 import { getCsv } from "../services/s3.js";
 import { validateCsv } from "./validator.js";
 import { upsertCharges } from "./upsert.js";
 import { recomputeCanonicalTables } from "./recompute.js";
+import { runNovaProactiveBrief } from "../nova/agent.js";
+import { upsertBrief } from "../services/brief.js";
 
 export interface IngestionResult {
   ok: boolean;
@@ -86,6 +90,43 @@ export async function runIngestion(
         months_affected: monthsDetected.length ? monthsDetected : null,
       })
       .eq("run_id", runId);
+
+    // Proactive brief: generate for latest affected month and update nova_status
+    const primaryMonth =
+      monthsDetected.length > 0
+        ? monthsDetected.slice().sort().reverse()[0]!.slice(0, 7) + "-01"
+        : null;
+    if (primaryMonth && config.openaiApiKey) {
+      try {
+        const result = await runNovaProactiveBrief({
+          month: primaryMonth,
+          created_by: "ingestion",
+        });
+        await upsertBrief(supabase, {
+          month: result.month,
+          created_by: "ingestion",
+          headline_gross_billed: result.headline_gross_billed,
+          mom_delta: result.mom_delta,
+          mom_delta_pct: result.mom_delta_pct,
+          brief_markdown: result.brief_markdown,
+        });
+        await supabase
+          .from("ingestion_runs")
+          .update({ nova_status: "success" })
+          .eq("run_id", runId);
+      } catch (novaErr) {
+        const novaMsg =
+          novaErr instanceof Error ? novaErr.message : String(novaErr);
+        await supabase
+          .from("ingestion_runs")
+          .update({
+            nova_status: "failure",
+            error_message: `Nova brief: ${novaMsg}`,
+          })
+          .eq("run_id", runId);
+        // Ingestion succeeded; do not fail the pipeline
+      }
+    }
 
     return {
       ok: true,

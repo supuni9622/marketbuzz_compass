@@ -26,4 +26,6 @@ export const config = {
   openaiApiKey: process.env.OPENAI_API_KEY ?? "",
   /** Path to memory markdown files (repo /memory or S3-backed later). */
   memoryPath: process.env.MEMORY_PATH ?? "",
+  /** Optional: key for scheduled/internal calls to POST /admin/brief/generate (no Cognito). */
+  internalBriefApiKey: process.env.INTERNAL_BRIEF_API_KEY ?? "",
 };

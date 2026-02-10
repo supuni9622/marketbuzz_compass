@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { jwtVerify } from "jose";
 import { getJwks } from "./jwks.js";
+import { config } from "../config.js";
 import type { AuthUser } from "./types.js";
 
 export async function authMiddleware(
@@ -36,4 +37,31 @@ export async function requireAdmin(
   if (!groups.includes("Admin")) {
     await reply.status(403).send({ error: "Admin access required" });
   }
+}
+
+/**
+ * For POST /admin/brief/generate only: allow either Cognito Admin or internal key.
+ * Internal key: X-Internal-Brief-Key header or Authorization: Bearer <INTERNAL_BRIEF_API_KEY>.
+ */
+export async function requireAdminOrInternalBriefKey(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  const internalKey = config.internalBriefApiKey?.trim();
+  if (internalKey) {
+    const headerKey = request.headers["x-internal-brief-key"] as string | undefined;
+    const bearer = request.headers.authorization?.startsWith("Bearer ")
+      ? request.headers.authorization.slice(7).trim()
+      : "";
+    if ((headerKey && headerKey === internalKey) || (bearer && bearer === internalKey)) {
+      request.user = {
+        sub: "internal",
+        groups: ["Admin"],
+      } as AuthUser;
+      return;
+    }
+  }
+  await authMiddleware(request, reply);
+  if (reply.sent) return;
+  await requireAdmin(request, reply);
 }
