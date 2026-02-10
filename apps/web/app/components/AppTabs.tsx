@@ -26,7 +26,7 @@ export function AppTabs() {
   );
 
   return (
-    <div className="border-b border-slate-200 bg-white" aria-label="App filter">
+    <div className="border-b border-slate-200 bg-white shadow-sm" aria-label="App filter">
       <div className="mx-auto max-w-6xl px-4">
         <nav className="-mb-px flex gap-1" aria-label="App tabs">
           {APP_OPTIONS.map((opt) => {
@@ -36,10 +36,10 @@ export function AppTabs() {
               <Link
                 key={opt.value || "all"}
                 href={buildUrl(opt.value)}
-                className={`border-b-2 px-4 py-3 text-sm font-medium ${
+                className={`border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
                   isActive
                     ? "border-teal-600 text-teal-600"
-                    : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                    : "border-transparent text-slate-500 hover:border-teal-300 hover:text-slate-700"
                 }`}
               >
                 {opt.label}

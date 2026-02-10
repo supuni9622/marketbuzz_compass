@@ -19,7 +19,7 @@ export default function Home() {
   const sectionVariants = reduceMotion ? { hidden: fadeIn.reduced, visible: fadeIn.reduced } : fadeIn;
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-slate-50/70">
       <AppHeader />
       <AppTabs />
       <div className="mx-auto max-w-6xl px-4 py-6">

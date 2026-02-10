@@ -70,7 +70,7 @@ export function GlobalFilters() {
               const m = e.target.value;
               setParams({ month: m, compare: getPreviousMonth(m) });
             }}
-            className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm transition-colors hover:border-teal-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
           >
             {MONTH_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -87,7 +87,7 @@ export function GlobalFilters() {
             id="filter-compare"
             value={compareMonth}
             onChange={(e) => setParams({ compare: e.target.value })}
-            className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm transition-colors hover:border-teal-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
           >
             <option value={getPreviousMonth(month)}>Previous month</option>
             {MONTH_OPTIONS.filter((o) => o.value !== month).map((o) => (
@@ -105,7 +105,7 @@ export function GlobalFilters() {
             id="filter-app"
             value={appId}
             onChange={(e) => setParams({ app: e.target.value })}
-            className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm transition-colors hover:border-teal-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
           >
             {APP_OPTIONS.map((o) => (
               <option key={o.value || "all"} value={o.value}>
@@ -118,7 +118,7 @@ export function GlobalFilters() {
           <button
             type="button"
             onClick={copyLink}
-            className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
             title="Copy link to this view (current filters)"
           >
             {copyFeedback ? "Copied!" : "Copy link"}

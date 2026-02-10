@@ -25,7 +25,7 @@ export function NarrativeBlock({
 }: NarrativeBlockProps) {
   return (
     <section
-      className={`nova-entrance flex gap-4 rounded-lg border border-slate-200 bg-slate-50/80 p-4 ${isUpdating ? "nova-updating" : ""}`}
+      className={`nova-entrance flex gap-4 rounded-xl border border-slate-200 bg-gradient-to-br from-teal-50/50 to-white p-4 shadow-md ${isUpdating ? "nova-updating" : ""}`}
       aria-label="Nova monthly brief"
     >
       <NovaAvatar />

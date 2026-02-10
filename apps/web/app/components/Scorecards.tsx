@@ -165,7 +165,7 @@ export function Scorecards() {
         {cards.map((card, i) => (
           <motion.div
             key={card.key}
-            className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+            className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg"
             variants={cardVariants}
             custom={i}
           >
@@ -178,7 +178,7 @@ export function Scorecards() {
             <button
               type="button"
               onClick={() => setExpandedCard((c) => (c === card.key ? null : card.key))}
-              className="mt-2 text-sm font-medium text-teal-600 hover:text-teal-700 hover:underline"
+              className="mt-2 text-sm font-medium text-teal-600 transition-colors hover:text-teal-700 hover:underline"
             >
               {expandedCard === card.key ? "Hide evidence" : "Show evidence"}
             </button>

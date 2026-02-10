@@ -64,11 +64,11 @@ export default function AdminPage() {
   }
 
   return (
-    <main>
+    <main className="min-h-screen bg-slate-50/70">
       <h1 className="text-2xl font-bold text-slate-800">Admin</h1>
       <p className="mt-2 text-slate-600">Upload Clover CSV to run ingestion.</p>
 
-      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md">
         <h2 className="text-lg font-semibold text-slate-800">Upload CSV</h2>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
@@ -85,13 +85,13 @@ export default function AdminPage() {
                 setStatus("idle");
                 setMessage("");
               }}
-              className="mt-1 block w-full text-sm text-slate-600 file:mr-4 file:rounded file:border-0 file:bg-teal-50 file:px-4 file:py-2 file:text-teal-700 hover:file:bg-teal-100"
+              className="mt-1 block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-teal-600 file:px-4 file:py-2 file:text-white file:shadow-sm file:transition-all hover:file:bg-teal-700 hover:file:shadow-md"
             />
           </div>
           <button
             type="submit"
             disabled={status === "uploading" || !file}
-            className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50 disabled:hover:bg-teal-600"
+            className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md disabled:opacity-50 disabled:hover:bg-teal-600 disabled:hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
           >
             {status === "uploading" ? "Uploading…" : "Upload"}
           </button>
@@ -116,7 +116,7 @@ export default function AdminPage() {
       <UploadStatusList />
 
       <p className="mt-6 text-sm text-slate-500">
-        <Link href="/" className="text-teal-600 hover:underline">
+        <Link href="/" className="text-teal-600 transition-colors hover:text-teal-700 hover:underline">
           ← Back to Brief
         </Link>
       </p>

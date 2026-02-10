@@ -74,7 +74,7 @@ export default function GrowthPlanPage() {
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-slate-50/70">
       <AppHeader />
       <div className="mx-auto max-w-2xl px-4 py-6">
         <h1 className="text-xl font-semibold text-slate-800">Growth Plan</h1>
@@ -83,7 +83,7 @@ export default function GrowthPlanPage() {
         </p>
 
         {step === 1 && (
-          <div className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
             <h2 className="text-lg font-medium text-slate-800">Step 1: Baseline</h2>
             <p className="mt-2 text-slate-600">
               Last month gross billed: <strong>{formatCurrency(baseline)}</strong>
@@ -97,7 +97,7 @@ export default function GrowthPlanPage() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="mt-6 rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+              className="mt-6 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
             >
               Next — Set target
             </button>
@@ -105,7 +105,7 @@ export default function GrowthPlanPage() {
         )}
 
         {step === 2 && (
-          <div className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
             <h2 className="text-lg font-medium text-slate-800">Step 2: Target growth %</h2>
             <p className="mt-2 text-slate-600">Choose or enter target growth for next month.</p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -117,10 +117,10 @@ export default function GrowthPlanPage() {
                     setGrowthPct(p);
                     setCustomPct("");
                   }}
-                  className={`rounded-md border px-3 py-1.5 text-sm font-medium ${
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                     customPct === "" && growthPct === p
                       ? "border-teal-600 bg-teal-50 text-teal-700"
-                      : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                      : "border-slate-300 bg-white text-slate-700 hover:border-teal-300 hover:bg-slate-50"
                   }`}
                 >
                   {p}%
@@ -140,7 +140,7 @@ export default function GrowthPlanPage() {
                 value={customPct}
                 onChange={(e) => setCustomPct(e.target.value)}
                 placeholder="e.g. 12.5"
-                className="mt-1 w-24 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                className="mt-1 w-24 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
               />
             </div>
             {error && (
@@ -152,7 +152,7 @@ export default function GrowthPlanPage() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               >
                 Back
               </button>
@@ -160,7 +160,7 @@ export default function GrowthPlanPage() {
                 type="button"
                 onClick={runPlan}
                 disabled={!isValidPct || isLoading}
-                className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:bg-slate-300 disabled:text-slate-500"
+                className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none"
               >
                 {isLoading ? "Generating…" : `Generate plan (${displayPct}%)`}
               </button>
@@ -169,9 +169,9 @@ export default function GrowthPlanPage() {
         )}
 
         {step === 3 && result && (
-          <div className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
             <h2 className="text-lg font-medium text-slate-800">Growth plan</h2>
-            <div className="mt-4 whitespace-pre-wrap rounded bg-slate-50 p-4 text-sm text-slate-700">
+            <div className="mt-4 whitespace-pre-wrap rounded-lg border border-slate-100 bg-slate-50/80 p-4 text-sm text-slate-700">
               {result.markdown}
             </div>
             <p className="mt-4 text-xs text-slate-500">
@@ -180,7 +180,7 @@ export default function GrowthPlanPage() {
             <button
               type="button"
               onClick={reset}
-              className="mt-6 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="mt-6 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               Start over
             </button>
@@ -192,7 +192,7 @@ export default function GrowthPlanPage() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md"
             >
               Back to target
             </button>

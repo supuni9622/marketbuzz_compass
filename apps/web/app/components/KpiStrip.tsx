@@ -63,7 +63,7 @@ export function KpiStrip() {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="KPI strip loading">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-lg bg-slate-200" />
+          <div key={i} className="h-24 animate-pulse rounded-xl border border-slate-200 bg-slate-100 shadow-sm" />
         ))}
       </div>
     );
@@ -83,21 +83,21 @@ export function KpiStrip() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="KPI strip">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg">
         <p className="text-sm font-medium text-slate-600">Gross Billed</p>
         <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(billed_amount.current)}</p>
         <p className="mt-1 text-sm">
           <DeltaBadge delta={billed_amount.delta} deltaPct={billed_amount.delta_pct} />
         </p>
       </div>
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg">
         <p className="text-sm font-medium text-slate-600">Active Merchants</p>
         <p className="mt-1 text-2xl font-semibold text-slate-900">{formatNumber(active_merchants.current)}</p>
         <p className="mt-1 text-sm">
           <DeltaBadge delta={active_merchants.delta} deltaPct={active_merchants.delta_pct} />
         </p>
       </div>
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg">
         <p className="text-sm font-medium text-slate-600">Refunded</p>
         <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(refunded_amount.current)}</p>
         <p className="mt-1 text-sm">

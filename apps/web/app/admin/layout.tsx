@@ -32,22 +32,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-3">
+      <header className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-teal-600 hover:text-teal-700">
+          <Link href="/" className="text-xl font-bold text-teal-600 transition-colors hover:text-teal-700">
             MarketBuzz Compass
           </Link>
           <nav className="flex gap-4">
-            <Link href="/" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
+            <Link href="/" className="text-sm text-slate-600 transition-colors hover:text-teal-600 hover:underline">
               Brief
             </Link>
-            <Link href="/admin" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
+            <Link href="/admin" className="text-sm text-slate-600 transition-colors hover:text-teal-600 hover:underline">
               Upload
             </Link>
-            <Link href="/admin/packages" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
+            <Link href="/admin/packages" className="text-sm text-slate-600 transition-colors hover:text-teal-600 hover:underline">
               Packages
             </Link>
-            <Link href="/admin/memory" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
+            <Link href="/admin/memory" className="text-sm text-slate-600 transition-colors hover:text-teal-600 hover:underline">
               Memory
             </Link>
           </nav>

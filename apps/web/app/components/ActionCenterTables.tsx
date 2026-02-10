@@ -254,7 +254,7 @@ function MerchantTable({
   const totalPages = Math.ceil(data.total_rows / data.page_size);
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50">
@@ -266,7 +266,7 @@ function MerchantTable({
           </thead>
           <tbody className="divide-y divide-slate-200">
             {data.data.map((row) => (
-              <tr key={`${row.merchant_id}-${row.app_id}`} className="hover:bg-slate-50">
+              <tr key={`${row.merchant_id}-${row.app_id}`} className="transition-colors hover:bg-slate-50/80">
                 <td className="px-4 py-2 text-slate-800">{row.merchant_name}</td>
                 <td className="px-4 py-2 text-slate-600">{row.app_name}</td>
                 <td className="px-4 py-2">
@@ -297,7 +297,7 @@ function MerchantTable({
                 const filename = `merchants-${exportLabel}-page${data.page}.csv`;
                 downloadCsv(csv, filename);
               }}
-              className="rounded border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100"
+              className="rounded-lg bg-teal-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1"
             >
               Export CSV
             </button>
@@ -307,7 +307,7 @@ function MerchantTable({
                   type="button"
                   disabled={data.page <= 1}
                   onClick={() => onPageChange(currentPage - 1)}
-                  className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-slate-100"
                 >
                   Previous
                 </button>
@@ -315,7 +315,7 @@ function MerchantTable({
                   type="button"
                   disabled={data.page >= totalPages}
                   onClick={() => onPageChange(currentPage + 1)}
-                  className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-slate-100"
                 >
                   Next
                 </button>
@@ -360,7 +360,7 @@ function RefundTable({
   }
   const totalPages = Math.ceil(data.total_rows / data.page_size);
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50">
@@ -372,7 +372,7 @@ function RefundTable({
           </thead>
           <tbody className="divide-y divide-slate-200">
             {data.data.map((row, i) => (
-              <tr key={`${row.charge_id}-${i}`} className="hover:bg-slate-50">
+              <tr key={`${row.charge_id}-${i}`} className="transition-colors hover:bg-slate-50/80">
                 <td className="px-4 py-2 text-slate-800">{row.merchant_name}</td>
                 <td className="px-4 py-2 text-slate-600">{row.app_id}</td>
                 <td className="px-4 py-2 text-right text-slate-800">
@@ -393,7 +393,7 @@ function RefundTable({
             onClick={() => {
               downloadCsv(refundRowsToCsv(data.data), `merchants-refunds-page${data.page}.csv`);
             }}
-            className="rounded border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded-lg bg-teal-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1"
           >
             Export CSV
           </button>
@@ -403,7 +403,7 @@ function RefundTable({
                 type="button"
                 disabled={data.page <= 1}
                 onClick={() => onPageChange(currentPage - 1)}
-                className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-slate-100"
               >
                 Previous
               </button>
@@ -411,7 +411,7 @@ function RefundTable({
                 type="button"
                 disabled={data.page >= totalPages}
                 onClick={() => onPageChange(currentPage + 1)}
-                className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-slate-100"
               >
                 Next
               </button>
@@ -456,7 +456,7 @@ function UninstallTable({
   }
   const totalPages = Math.ceil(data.total_rows / data.page_size);
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50">
@@ -468,7 +468,7 @@ function UninstallTable({
           </thead>
           <tbody className="divide-y divide-slate-200">
             {data.data.map((row) => (
-              <tr key={`${row.merchant_id}-${row.app_id}`} className="hover:bg-slate-50">
+              <tr key={`${row.merchant_id}-${row.app_id}`} className="transition-colors hover:bg-slate-50/80">
                 <td className="px-4 py-2 text-slate-800">{row.merchant_name}</td>
                 <td className="px-4 py-2 text-slate-600">{row.app_id}</td>
                 <td className="px-4 py-2 text-slate-600">{row.uninstall_date}</td>
@@ -487,7 +487,7 @@ function UninstallTable({
             onClick={() => {
               downloadCsv(uninstallRowsToCsv(data.data), `merchants-uninstalls-page${data.page}.csv`);
             }}
-            className="rounded border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded-lg bg-teal-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1"
           >
             Export CSV
           </button>
@@ -497,7 +497,7 @@ function UninstallTable({
                 type="button"
                 disabled={data.page <= 1}
                 onClick={() => onPageChange(currentPage - 1)}
-                className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-slate-100"
               >
                 Previous
               </button>
@@ -505,7 +505,7 @@ function UninstallTable({
                 type="button"
                 disabled={data.page >= totalPages}
                 onClick={() => onPageChange(currentPage + 1)}
-                className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-slate-100"
               >
                 Next
               </button>
