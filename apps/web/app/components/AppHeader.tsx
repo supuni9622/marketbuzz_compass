@@ -15,7 +15,25 @@ export function AppHeader() {
             MarketBuzz Compass
           </Link>
           <p className="text-sm text-slate-500">Interpret. Guide. Plan. Warn.</p>
-          <div className="flex items-center gap-4">
+          <nav className="flex items-center gap-4" aria-label="Main">
+            <Link
+              href="/"
+              className="text-sm font-medium text-slate-600 hover:text-teal-600 hover:underline"
+            >
+              Brief
+            </Link>
+            <Link
+              href="/ask"
+              className="text-sm font-medium text-slate-600 hover:text-teal-600 hover:underline"
+            >
+              Ask MarketBuzz
+            </Link>
+            <Link
+              href="/growth-plan"
+              className="text-sm font-medium text-slate-600 hover:text-teal-600 hover:underline"
+            >
+              Growth Plan
+            </Link>
             {user && (
               <span className="text-sm text-slate-600" title={user.email}>
                 {user.email}
@@ -36,7 +54,7 @@ export function AppHeader() {
             >
               Sign out
             </button>
-          </div>
+          </nav>
         </div>
       </header>
       <GlobalFilters />

@@ -136,3 +136,56 @@ export async function getKpis(
     active_merchants: metricWithCompare(currentActive, compareActive),
   };
 }
+
+export interface TrendPoint {
+  month: string;
+  value: number;
+}
+
+export interface TrendResponse {
+  metric: "billed_amount" | "active_merchants" | "refunded_amount";
+  points: TrendPoint[];
+}
+
+/**
+ * Get trend over last N months: billed_amount, active_merchants, or refunded_amount from canonical tables.
+ */
+export async function getTrend(
+  supabase: SupabaseClient,
+  params: {
+    metric: "billed_amount" | "active_merchants" | "refunded_amount";
+    months_back?: number;
+    app_id?: string;
+  }
+): Promise<TrendResponse> {
+  const monthsBack = Math.min(24, Math.max(1, params.months_back ?? 12));
+  const end = new Date();
+  const start = new Date(end.getFullYear(), end.getMonth() - monthsBack, 1);
+  const months: MonthDate[] = [];
+  for (let d = new Date(start); d <= end; d.setMonth(d.getMonth() + 1)) {
+    months.push(
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`
+    );
+  }
+
+  if (params.metric === "active_merchants") {
+    const points: TrendPoint[] = [];
+    for (const month of months) {
+      const count = await countActiveMerchants(supabase, month, params.app_id);
+      points.push({ month, value: count });
+    }
+    return { metric: "active_merchants", points };
+  }
+
+  const points: TrendPoint[] = [];
+  for (const month of months) {
+    const row = await aggregateMrl(supabase, month, params.app_id);
+    const value =
+      params.metric === "refunded_amount" ? row.refunded_amount : row.billed_amount;
+    points.push({ month, value });
+  }
+  return {
+    metric: params.metric === "refunded_amount" ? "refunded_amount" : "billed_amount",
+    points,
+  };
+}

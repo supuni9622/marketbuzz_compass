@@ -5,7 +5,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { db } from "../db.js";
 import { authMiddleware } from "../auth/middleware.js";
-import { getKpis } from "../services/metrics.js";
+import { getKpis, getTrend } from "../services/metrics.js";
 
 export async function metricsRoutes(
   app: FastifyInstance,
@@ -116,6 +116,89 @@ export async function metricsRoutes(
       } catch (err) {
         app.log.error(err);
         return reply.status(500).send({ error: "Failed to fetch KPIs" });
+      }
+    }
+  );
+
+  app.get(
+    "/trend",
+    {
+      preHandler: [authMiddleware],
+      schema: {
+        description:
+          "Trend over time: billed_amount or active_merchants for last N months (canonical tables).",
+        tags: ["Metrics"],
+        querystring: {
+          type: "object",
+          properties: {
+            metric: {
+              type: "string",
+              enum: ["billed_amount", "active_merchants", "refunded_amount"],
+              description: "Metric to trend",
+            },
+            months_back: {
+              type: "integer",
+              description: "Number of months (default 12, max 24)",
+            },
+            app_id: { type: "string", description: "Optional app filter" },
+          },
+          required: ["metric"],
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              metric: { type: "string" },
+              points: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    month: { type: "string" },
+                    value: { type: "number" },
+                  },
+                },
+              },
+            },
+          },
+          400: { type: "object", properties: { error: { type: "string" } } },
+          503: { type: "object", properties: { error: { type: "string" } } },
+          500: { type: "object", properties: { error: { type: "string" } } },
+        },
+      },
+    },
+    async (request, reply) => {
+      const q = request.query as {
+        metric?: string;
+        months_back?: string;
+        app_id?: string;
+      };
+      const metric = q.metric as "billed_amount" | "active_merchants" | undefined;
+      if (
+        metric !== "billed_amount" &&
+        metric !== "active_merchants" &&
+        metric !== "refunded_amount"
+      ) {
+        return reply.status(400).send({
+          error:
+            "metric is required and must be billed_amount, active_merchants, or refunded_amount",
+        });
+      }
+      if (!db.isConfigured()) {
+        return reply.status(503).send({ error: "Database not configured" });
+      }
+      try {
+        const supabase = db.get();
+        const monthsBack = q.months_back ? parseInt(q.months_back, 10) : undefined;
+        const result = await getTrend(supabase, {
+          metric: metric as "billed_amount" | "active_merchants" | "refunded_amount",
+          months_back: monthsBack,
+          app_id: q.app_id?.trim() || undefined,
+        });
+        return result;
+      } catch (err) {
+        app.log.error(err);
+        return reply.status(500).send({ error: "Failed to fetch trend" });
       }
     }
   );

@@ -53,5 +53,12 @@ export function createApiClient(options: ApiClientOptions) {
     get<T>(path: string, params?: Record<string, string>): Promise<T> {
       return request<T>(path, { method: "GET", params });
     },
+    post<T>(path: string, body?: unknown, params?: Record<string, string>): Promise<T> {
+      return request<T>(path, {
+        method: "POST",
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        params,
+      });
+    },
   };
 }

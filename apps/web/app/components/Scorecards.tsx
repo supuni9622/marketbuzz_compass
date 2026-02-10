@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { motion, useReducedMotion } from "framer-motion";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
+import { TrendSparkline } from "./TrendSparkline";
 
 interface MetricWithCompare {
   current: number;
@@ -40,31 +42,24 @@ function DeltaBadge({ delta, deltaPct }: { delta: number; deltaPct: number | nul
   return <span className={colorClass}>{pctStr}</span>;
 }
 
-/** Minimal 2-point sparkline (compare | current) for scorecards until trend API exists */
-function MiniSparkline({ compare, current }: { compare: number; current: number }) {
-  const total = compare + current;
-  if (total <= 0) {
-    return <div className="mt-2 h-1.5 w-full rounded-full bg-slate-100" aria-hidden />;
+function getCardVariants(reduceMotion: boolean | null) {
+  if (reduceMotion) {
+    return { hidden: { opacity: 1, y: 0 }, visible: { opacity: 1, y: 0 } };
   }
-  const compareW = (compare / total) * 100;
-  const currentW = (current / total) * 100;
-  return (
-    <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100" aria-hidden>
-      <div
-        className="bg-slate-300 transition-all duration-300"
-        style={{ width: `${compareW}%` }}
-      />
-      <div
-        className="bg-teal-500 transition-all duration-300"
-        style={{ width: `${currentW}%` }}
-      />
-    </div>
-  );
+  return {
+    hidden: { opacity: 0, y: 8 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.06, duration: 0.25 },
+    }),
+  };
 }
 
 export function Scorecards() {
   const api = useApiClient();
   const { monthApi, compareMonthApi, appId } = useFilters();
+  const reduceMotion = useReducedMotion();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["kpis", monthApi, compareMonthApi, appId],
@@ -77,14 +72,19 @@ export function Scorecards() {
 
   if (isLoading) {
     return (
-      <section className="mt-8" aria-label="Scorecards loading">
+      <motion.section
+        className="mt-8"
+        aria-label="Scorecards loading"
+        initial={false}
+        animate={{ opacity: 1 }}
+      >
         <h2 className="text-lg font-semibold text-slate-800">Scorecards</h2>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-32 animate-pulse rounded-lg bg-slate-200" />
           ))}
         </div>
-      </section>
+      </motion.section>
     );
   }
 
@@ -102,37 +102,65 @@ export function Scorecards() {
   if (!data) return null;
 
   const { billed_amount, active_merchants, refunded_amount } = data;
+  const cardVariants = getCardVariants(reduceMotion ?? false);
+  const cards = [
+    {
+      key: "billed",
+      title: "Gross Billed",
+      value: formatCurrency(billed_amount.current),
+      delta: billed_amount.delta,
+      deltaPct: billed_amount.delta_pct,
+      trendMetric: "billed_amount" as const,
+    },
+    {
+      key: "active",
+      title: "Active Merchants",
+      value: formatNumber(active_merchants.current),
+      delta: active_merchants.delta,
+      deltaPct: active_merchants.delta_pct,
+      trendMetric: "active_merchants" as const,
+    },
+    {
+      key: "refunded",
+      title: "Refunded",
+      value: formatCurrency(refunded_amount.current),
+      delta: refunded_amount.delta,
+      deltaPct: refunded_amount.delta_pct,
+      trendMetric: "refunded_amount" as const,
+    },
+  ];
 
   return (
-    <section className="mt-8" aria-label="Scorecards">
+    <motion.section
+      className="mt-8"
+      aria-label="Scorecards"
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: { staggerChildren: 0.06 },
+        },
+      }}
+    >
       <h2 className="text-lg font-semibold text-slate-800">Scorecards</h2>
-      <p className="mt-1 text-sm text-slate-500">Compare vs previous month (bar: compare → current)</p>
+      <p className="mt-1 text-sm text-slate-500">Last 12 months trend (sparkline)</p>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-          <p className="text-sm font-medium text-slate-600">Gross Billed</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(billed_amount.current)}</p>
-          <p className="mt-1 text-sm">
-            <DeltaBadge delta={billed_amount.delta} deltaPct={billed_amount.delta_pct} />
-          </p>
-          <MiniSparkline compare={billed_amount.compare} current={billed_amount.current} />
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-          <p className="text-sm font-medium text-slate-600">Active Merchants</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">{formatNumber(active_merchants.current)}</p>
-          <p className="mt-1 text-sm">
-            <DeltaBadge delta={active_merchants.delta} deltaPct={active_merchants.delta_pct} />
-          </p>
-          <MiniSparkline compare={active_merchants.compare} current={active_merchants.current} />
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-          <p className="text-sm font-medium text-slate-600">Refunded</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(refunded_amount.current)}</p>
-          <p className="mt-1 text-sm">
-            <DeltaBadge delta={refunded_amount.delta} deltaPct={refunded_amount.delta_pct} />
-          </p>
-          <MiniSparkline compare={refunded_amount.compare} current={refunded_amount.current} />
-        </div>
+        {cards.map((card, i) => (
+          <motion.div
+            key={card.key}
+            className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+            variants={cardVariants}
+            custom={i}
+          >
+            <p className="text-sm font-medium text-slate-600">{card.title}</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-900">{card.value}</p>
+            <p className="mt-1 text-sm">
+              <DeltaBadge delta={card.delta} deltaPct={card.deltaPct} />
+            </p>
+            <TrendSparkline metric={card.trendMetric} monthsBack={12} />
+          </motion.div>
+        ))}
       </div>
-    </section>
+    </motion.section>
   );
 }

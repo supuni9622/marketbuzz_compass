@@ -1,18 +1,20 @@
 # MarketBuzz Compass — Progress Tracker
 
 **Last updated:** 2026-02-10  
-**Current phase:** Phase 1 Nova (backend done); Full UI next  
-**Status:** Phase 1 Nova backend complete. MVP frontend unchanged. Nova article added to docs/articles.  
-**Next task:** Full UI — Ask MarketBuzz chat, Growth Plan wizard, App tabs.
+**Current phase:** Phase 1 Full UI done  
+**Status:** Ask MarketBuzz chat, Growth Plan wizard, App tabs, Framer Motion, GET /metrics/trend + trend sparklines on Scorecards. Run `pnpm install` for framer-motion.  
+**Next task:** Optional Admin Memory Manager, package catalog CRUD; deployment.
 
 ### What's done
 - **MVP:** Monorepo, Supabase, ingestion (CSV → S3 → SQS → Lambda), canonical tables, Fastify API (metrics, merchants, brief, admin upload), Next.js (Cognito, filters, KPI strip, Scorecards, Action Center tables, Admin CSV upload + status), GET /brief (reads monthly_briefs or placeholder).
 - **Phase 1 Nova (backend):** OpenAI config; memory/ + task-based loader; Nova tools (get_kpi, list_merchants, get_trend, get_growth_baseline); LLM router (workflow_budgets.json); POST /nova/chat, POST /nova/growth-plan, POST /admin/brief/generate (Admin, upserts monthly_briefs); brief.upsertBrief.
-- **Docs:** Nova architecture article — `docs/articles/nova-architecture-and-business-value.md` (architecture, capabilities, behavior, business value); README table updated.
+- **Full UI:** Ask MarketBuzz chat (`/ask` — POST /nova/chat, conversation display); Growth Plan wizard (`/growth-plan` — steps + POST /nova/growth-plan, result); App tabs (AppTabs component on home, sets app filter via URL); nav links (Brief, Ask MarketBuzz, Growth Plan) in AppHeader.
+- **UI polish:** Framer Motion (framer-motion in web package; entrance on home sections + Scorecards stagger; useReducedMotion); GET /metrics/trend (billed_amount, active_merchants, refunded_amount); TrendSparkline component; Scorecards use 12-month trend sparklines.
+- **Docs:** Nova architecture article — `docs/articles/nova-architecture-and-business-value.md`; README table updated.
 
 ### What's remaining
-- **Full UI (Phase 1):** Ask MarketBuzz chat UI (wire POST /nova/chat), Growth Plan wizard (wire POST /nova/growth-plan), App tabs (per-app views), optional Admin Memory Manager, optional package catalog CRUD.
-- **UI polish :** Framer Motion, charts/sparklines per UI_LAYOUT_SPEC (Section B/C), evidence zone.
+- **Optional:** Admin Memory Manager, package catalog CRUD.
+- **Optional:** Evidence zone charts (Section C), more Framer expand/collapse.
 - **Deployment:** API → Lambda + API Gateway; Worker → Lambda (SQS); Nova → Lambda; Web → Vercel/Amplify; prod DB (RDS or Supabase).
 - **Proactive brief trigger:** Optional worker/scheduler to call POST /admin/brief/generate after upload or monthly close.
 
@@ -100,11 +102,13 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] Proactive brief generation (POST /admin/brief/generate; Admin; upsert monthly_briefs)
 
 ### 9. Full UI
-- [ ] Ask MarketBuzz chat
-- [ ] Growth Plan wizard
-- [ ] App tabs
+- [x] Ask MarketBuzz chat (/ask; POST /nova/chat; conversation + filters context)
+- [x] Growth Plan wizard (/growth-plan; steps + POST /nova/growth-plan; result)
+- [x] App tabs (AppTabs on home; sets app filter via URL)
 - [ ] Admin Memory Manager (optional for Phase 1)
 - [ ] Package catalog CRUD
+- [x] Framer Motion (entrance, Scorecards stagger; useReducedMotion)
+- [x] GET /metrics/trend + TrendSparkline on Scorecards (12-month sparklines)
 
 ### 10. Deployment
 - [ ] API → Lambda + API Gateway
@@ -166,6 +170,12 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-10 | Copy link / deep links | GlobalFilters: "Copy link" button copies current URL (origin + pathname + params); ensures month, compare, app in URL; "Copied!" feedback 2s. |
 | 2026-02-10 | Phase 1 Nova backend | OpenAI config; memory/ + task-based loader (memoryLoader.ts); Nova tools (get_kpi, list_merchants, get_trend, get_growth_baseline); LLM router (workflow_budgets.json); POST /nova/chat, POST /nova/growth-plan, POST /admin/brief/generate; brief.upsertBrief. |
 | 2026-02-10 | Nova article | docs/articles/nova-architecture-and-business-value.md — architecture, capabilities, behavior, business value; docs/articles/README.md table updated. |
+| 2026-02-10 | Full UI: Ask MarketBuzz | /ask page; POST /nova/chat; conversation; filters (month, compare, app) in body; nav link. |
+| 2026-02-10 | Full UI: Growth Plan wizard | /growth-plan page; steps (baseline → target % → generate); POST /nova/growth-plan; result; nav link. |
+| 2026-02-10 | Full UI: App tabs | AppTabs component; All Apps / SMS / CRM / Unlock tabs set app URL param; home page. |
+| 2026-02-10 | API client post | lib/api/client.ts: post(path, body?, params?) for Nova chat/growth-plan. |
+| 2026-02-10 | GET /metrics/trend | metrics service getTrend(); route GET /metrics/trend (metric, months_back, app_id); billed_amount, active_merchants, refunded_amount. |
+| 2026-02-10 | Trend sparklines + Framer Motion | TrendSparkline component (GET /metrics/trend); Scorecards use trend sparklines; Framer Motion entrance + stagger; useReducedMotion; framer-motion in web package. |
 
 ---
 
@@ -201,7 +211,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 ## Handoff for New Context
 When starting a new chat, paste this:
 
-*"Continue MarketBuzz Compass. Backend: GET /metrics/kpis, GET /merchants/lifecycle, GET /merchants/refunds, GET /merchants/uninstalls (paginated), GET /brief, POST /nova/chat, POST /nova/growth-plan, POST /admin/brief/generate, POST /admin/upload/csv, GET /admin/uploads. Frontend: Cognito Hosted UI (PKCE), global filters + Copy link, KPI strip, narrative, Scorecards, Action Center (At Risk, Lost, Refunds, Uninstalls) with Export CSV, Admin upload + status, Nova animations. Phase 1 Nova backend done; next: Full UI (Ask MarketBuzz chat, Growth Plan wizard, App tabs). Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md @docs/AGENT_SPEC.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
+*"Continue MarketBuzz Compass. Backend: GET /metrics/kpis, GET /metrics/trend, GET /merchants/lifecycle, GET /merchants/refunds, GET /merchants/uninstalls (paginated), GET /brief, POST /nova/chat, POST /nova/growth-plan, POST /admin/brief/generate, POST /admin/upload/csv, GET /admin/uploads. Frontend: Cognito Hosted UI (PKCE), global filters + Copy link, App tabs, KPI strip, narrative, Scorecards (12-month trend sparklines), Action Center (At Risk, Lost, Refunds, Uninstalls) with Export CSV, /ask (Ask MarketBuzz chat), /growth-plan (wizard), Admin upload + status, Framer Motion (entrance, useReducedMotion). Phase 1 Full UI done. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md @docs/AGENT_SPEC.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web. Run pnpm install for framer-motion."*
 
 ---
 
