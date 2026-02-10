@@ -11,12 +11,14 @@ function getClient(): SQSClient {
     client = new SQSClient({
       region: config.awsRegion,
       credentials:
-        process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
-          ? {
-              accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-              secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            }
-          : undefined,
+        typeof process.env.AWS_LAMBDA_FUNCTION_NAME !== "undefined"
+          ? undefined
+          : process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+            ? {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+              }
+            : undefined,
     });
   }
   return client;

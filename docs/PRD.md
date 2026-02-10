@@ -5,6 +5,8 @@ Revenue Intelligence Hub (CSV Ingest + Canonical Metrics + Analytics Agent)
 An internal Revenue & Merchant Intelligence System
 that ingests recurring Clover CSV snapshots, deduplicates them, reconstructs billing lifecycle + merchant lifecycle, and exposes human-readable insights via tables + an intelligent assistant.
 
+**Product context:** CSV on 1st of month; total billed = MRR. We need last vs this month MRR, lost/added amounts and merchants, app-wise recurring revenue, lifecycle counts, uninstalled list. “Lost” for a month = in last month’s billed, not this month’s (lifecycle At Risk). ONHOLD = payment at risk. Goal: manual work in ~1 minute + AI proactive/post-action suggestions; calculations accurate; DB and AI cost-conscious. See `docs/MRR_AND_MANUAL_OUTPUTS.md`.
+
 Not a dashboard.
 Not raw analytics.
 A decision-support system.
@@ -18,7 +20,7 @@ Charge ID = primary key
 
 Billing always happens first (1st of month)
 
-Status is latest known stage (BILLED → COLLECTED → DEPOSITED)
+Status is latest known stage (BILLED / ONHOLD → COLLECTED → DEPOSITED; REFUND). ONHOLD = billed but not yet collected/deposited; tracked for future calculations.
 
 Marketing should NEVER reason about statuses
 

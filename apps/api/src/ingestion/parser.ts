@@ -29,9 +29,11 @@ function parseChargeDate(dateStr: string): { date: string; month: string } | nul
   const trimmed = dateStr.trim();
   const m = trimmed.match(/(\d{2})-(\w{3})-(\d{4})/);
   if (!m) return null;
-  const monthNum = MONTH_NAMES[m[2]] ?? "01";
-  const date = `${m[3]}-${monthNum}-${m[1]}`;
-  const month = `${m[3]}-${monthNum}-01`;
+  const day = m[1], monthKey = m[2], year = m[3];
+  if (day === undefined || monthKey === undefined || year === undefined) return null;
+  const monthNum = MONTH_NAMES[monthKey] ?? "01";
+  const date = `${year}-${monthNum}-${day}`;
+  const month = `${year}-${monthNum}-01`;
   return { date, month };
 }
 
@@ -41,8 +43,10 @@ function parseUninstallDate(dateStr: string): string | null {
   if (!trimmed) return null;
   const m = trimmed.match(/(\d{2})-(\w{3})-(\d{4})/);
   if (!m) return null;
-  const monthNum = MONTH_NAMES[m[2]] ?? "01";
-  return `${m[3]}-${monthNum}-${m[1]}`;
+  const day = m[1], monthKey = m[2], year = m[3];
+  if (day === undefined || monthKey === undefined || year === undefined) return null;
+  const monthNum = MONTH_NAMES[monthKey] ?? "01";
+  return `${year}-${monthNum}-${day}`;
 }
 
 function parseAmount(val: string): number | null {

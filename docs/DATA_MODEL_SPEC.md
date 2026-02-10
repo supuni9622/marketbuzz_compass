@@ -42,14 +42,14 @@ Stores the **latest known snapshot** per charge.
 | app_name | string | Snapshot value |
 | plan_name | string | Raw plan/tier name |
 | amount | decimal | Positive or negative |
-| status_current | enum | BILLED / COLLECTED / DEPOSITED / REFUND |
+| status_current | enum | BILLED / COLLECTED / DEPOSITED / ONHOLD / REFUND / OTHER (Clover lifecycle: see `CLOVER_CSV_SCHEMA.md` §2; Canceled/Failed map to OTHER) |
 | uninstall_date | date (nullable) | Churn signal |
 | last_seen_at | timestamp | When this row was last updated |
 | source_file_id | string | Upload audit |
 
 **Rules**
-- UPSERT by `charge_id`
-- If same charge appears again, overwrite mutable fields
+- UPSERT by `charge_id` (newest snapshot wins; same charge can appear in later CSVs with updated status — see Clover lifecycle in `CLOVER_CSV_SCHEMA.md` §2)
+- If same charge appears again, overwrite mutable fields (including status_current)
 - Never delete rows
 
 **Indexes**
@@ -81,11 +81,12 @@ Used for:
 | refunded_amount | decimal |
 | net_statement_amount | decimal (optional) |
 
-**Definitions**
-- **Billed** = sum of all charges in that month
-- **Collected** = charges with status ≥ COLLECTED
-- **Deposited** = status = DEPOSITED
-- **Refunded** = negative amounts
+**Definitions** (aligned with Clover billing status lifecycle; see `CLOVER_CSV_SCHEMA.md` §2)
+- **Billed** = sum of all charges in that month (includes BILLED, ONHOLD, COLLECTED, DEPOSITED; excludes REFUND for net)
+- **Collected** = charges with status in (COLLECTED, DEPOSITED) — i.e. Clover collected/deposited; not BILLED/ONHOLD
+- **Deposited** = status = DEPOSITED (Clover deposited your share; typically 2–3 weeks after collection)
+- **Refunded** = status = REFUND (or amount < 0 as fallback)
+- **ONHOLD** = billed but collection/deposit blocked (e.g. payment failed, overdue); tracked for cash reality
 
 **Indexes**
 - (month)
@@ -110,8 +111,12 @@ Defines Active → At Risk → Lost.
 
 **Lifecycle Rules**
 - Active → billed this month
-- AtRisk → billed last month, missing this month
+- AtRisk → billed last month, missing this month (“gone/uninstalled” for that month comparison)
 - Lost → missing ≥2 consecutive months OR refunded/uninstalled
+
+**Two “at risk” concepts (see `MRR_AND_MANUAL_OUTPUTS.md`):**
+- **At Risk (lifecycle)** = above (billing presence: billed M−1, not M). Use for “lost merchants” list.
+- **At Risk (payment / ONHOLD)** = billed this month but `status_current = ONHOLD`. Use for payment/collection risk; query charges or a view by month + ONHOLD.
 
 **Indexes**
 - (month, lifecycle_state)

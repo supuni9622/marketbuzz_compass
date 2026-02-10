@@ -95,7 +95,12 @@ export async function runIngestion(
       months_affected: monthsDetected,
     };
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+    const errMsg =
+      err instanceof Error
+        ? err.message
+        : err && typeof err === "object" && "message" in err
+          ? String((err as { message: unknown }).message)
+          : JSON.stringify(err);
     await supabase
       .from("ingestion_uploads")
       .update({ status: "failure", error_message: errMsg })

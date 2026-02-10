@@ -22,12 +22,30 @@ Reference for the Clover billing export CSV format. This is the **primary input*
 | Charge Type | string | SUBSCRIPTION / PARTIAL_MONTH / PRORATED_SUBSCRIPTION | Charge type |
 | Currency | string | USD | |
 | Amount | decimal | 59.95 or -37.74 | Negative for refunds |
-| Status | string | BILLED / COLLECTED / DEPOSITED / REFUNDED / ONHOLD | Map REFUNDED → REFUND |
+| Status | string | See §2 Clover Billing Status Lifecycle | Normalized to REFUND, BILLED, ONHOLD, COLLECTED, DEPOSITED, OTHER |
 | Export Month | string | 2026-01 | Export run identifier |
 
 ---
 
-## 2) Parsing Rules
+## 2) Clover Billing Status Lifecycle
+
+Clover billing statuses and their meanings. A single charge progresses through this lifecycle; CSV exports are **snapshots** of the latest status per charge. See `INGESTION_WORKFLOW.md` for upsert (newest snapshot wins).
+
+| Status | Meaning |
+|--------|---------|
+| **Billed** | Charge is requested or scheduled but not yet collected. Sub-statuses: Requested, Resubmitted, Upcoming Invoice. |
+| **On Hold** | Something prevented collection or deposit — e.g. merchant's payment failed, deposit failed to your bank, or merchant is overdue. |
+| **Collected** | Clover successfully collected the payment from the merchant's bank. |
+| **Deposited** | Clover successfully deposited your share into your bank. Generally happens after collection (often 2–3 weeks later). |
+| **Refund** | Refund in progress or completed (prorated subscription changes, merchant refunds, developer-initiated refunds). |
+| **Canceled** | Charge was stopped/canceled before it processed. Examples: Cancelled, Reversed, Uncollectible, Waived. |
+| **Failed** | The refund attempt failed (e.g. refund rejected by bank). |
+
+**Lifecycle flow:** Billed → (On Hold / Collected / Refund / Canceled) → Collected → Deposited. Same `Charge ID` can appear in later CSV exports with an updated status; we upsert by Charge ID so the latest status overwrites the previous one.
+
+---
+
+## 3) Parsing Rules
 
 ### Charge Date → charge_month
 
@@ -35,10 +53,13 @@ Reference for the Clover billing export CSV format. This is the **primary input*
 - Example: `01-Jan-2026 12:32 AM +0000` → `charge_month` = `2026-01-01`
 - Derive month from the date portion; normalize to first day of month.
 
-### Status mapping
+### Status mapping (to `status_current`)
 
-- REFUNDED / REFUND → REFUND
-- BILLED, COLLECTED, DEPOSITED, ONHOLD → keep as-is or map to canonical values per `INGESTION_WORKFLOW.md`
+- REFUNDED / REFUND → **REFUND**
+- BILLED, COLLECTED, DEPOSITED, ONHOLD → kept as-is (Clover definitions in §2).
+- **Canceled**-type values (Cancelled, Reversed, Uncollectible, Waived) → **OTHER**
+- **Failed** (e.g. refund failed) → **OTHER**
+- Any other CSV value → **OTHER**
 
 ### Amount
 
@@ -52,7 +73,7 @@ Reference for the Clover billing export CSV format. This is the **primary input*
 
 ---
 
-## 3) App Names (Observed)
+## 4) App Names (Observed)
 
 - SMS Marketing
 - Email Marketing with UMarket
@@ -67,7 +88,7 @@ Reference for the Clover billing export CSV format. This is the **primary input*
 
 ---
 
-## 4) Charge Types
+## 5) Charge Types
 
 | Value | Description |
 |-------|-------------|
@@ -77,7 +98,7 @@ Reference for the Clover billing export CSV format. This is the **primary input*
 
 ---
 
-## 5) Constraints
+## 6) Constraints
 
 - Clover export covers **rolling ~3 months** only
 - Same Charge ID can appear in overlapping exports (repeated uploads)
@@ -87,7 +108,7 @@ Reference for the Clover billing export CSV format. This is the **primary input*
 
 ---
 
-## 6) Required Fields for Ingestion
+## 7) Required Fields for Ingestion
 
 Per `INGESTION_WORKFLOW.md`, minimum required:
 
@@ -102,7 +123,7 @@ Per `INGESTION_WORKFLOW.md`, minimum required:
 
 ---
 
-## 7) Mapping to charges_raw
+## 8) Mapping to charges_raw
 
 | CSV Column | charges_raw Column |
 |------------|-------------------|
@@ -121,7 +142,7 @@ Per `INGESTION_WORKFLOW.md`, minimum required:
 
 ---
 
-## 8) Related Docs
+## 9) Related Docs
 
 - `INGESTION_WORKFLOW.md` — validation, upsert, recompute
 - `DATA_MODEL_SPEC.md` — `charges_raw` and canonical tables

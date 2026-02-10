@@ -52,7 +52,7 @@ Notes:
 
 ## Collected Amount
 Definition:
-- Sum where status_current in (COLLECTED, DEPOSITED)
+- Sum where status_current in (COLLECTED, DEPOSITED). BILLED and ONHOLD are not collected; they are tracked separately for future calculations.
 
 ## Deposited Amount
 Definition:
@@ -61,6 +61,9 @@ Definition:
 ## Refunded Amount
 Definition:
 - Sum where status_current == REFUND (fallback: amount < 0)
+
+## Charge status values (for calculations)
+- BILLED, ONHOLD, COLLECTED, DEPOSITED, REFUND, OTHER. ONHOLD = billed but not yet moved to COLLECTED/DEPOSITED.
 
 ## Statement Net Revenue (Optional)
 Definition:

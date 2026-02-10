@@ -1,8 +1,8 @@
 # MarketBuzz Compass — Progress Tracker
 
-**Last updated:** 2026-02-08  
+**Last updated:** 2026-02-10  
 **Current phase:** MVP  
-**Status:** Day 3 partial — ingestion pipeline code complete, API→SQS→Lambda flow wired; Lambda fails with Runtime.Unknown (blocker)
+**Status:** Day 3 complete — ingestion pipeline working; Clover billing status lifecycle documented; next: MVP metrics endpoints, merchant list, brief placeholder, then frontend auth + Monthly Brief
 
 ---
 
@@ -24,6 +24,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] Migrations: `refund_merchants_monthly`, `uninstall_merchants_monthly`, `high_risk_churn_merchants`
 - [x] Migrations: `monthly_briefs`, `package_catalog`, `growth_forecast_monthly`
 - [x] Migration: RLS tripwire (000009_enable_rls_tripwire.sql)
+- [x] Migration: add ONHOLD to charge_status enum (20240210000001_add_charge_status_onhold.sql)
 - [x] Indexes per DATA_MODEL_SPEC
 
 ### 3. AWS Setup
@@ -41,13 +42,14 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] Auth middleware (JWT validation, RBAC)
 - [x] CSV upload endpoint (validate, store S3, enqueue)
 - [x] SQS queue + Lambda handler (SQS created, Lambda created, code deployed)
-- [ ] Lambda Runtime.Unknown fix (currently failing)
+- [x] Lambda ingestion worker (init fix, role-only credentials, ONHOLD enum; pipeline running)
 - [ ] Metrics endpoints (KPIs, MoM compare)
 - [ ] Merchant list endpoints (paginated)
 - [ ] Brief endpoint (placeholder narrative)
 
 ### 5. Ingestion Pipeline
 - [x] CSV parser (Clover schema)
+- [x] Clover billing status lifecycle (Billed, On Hold, Collected, Deposited, Refund, Canceled, Failed) — docs + parser STATUS_OTHER, ON HOLD normalization
 - [x] Validation rules
 - [x] UPSERT into `charges_raw`
 - [x] Recompute logic for canonical tables
@@ -128,6 +130,10 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-08 | Upload → SQS | API sends message after S3 upload; env SQS_QUEUE_URL |
 | 2026-02-08 | Lambda IAM | SQS ReceiveMessage, S3 GetObject, CloudWatch Logs |
 | 2026-02-08 | API IAM | SQS SendMessage for upload |
+| 2026-02-10 | charge_status ONHOLD | Migration 20240210000001_add_charge_status_onhold.sql; shared type; docs (DATA_MODEL_SPEC, INGESTION_WORKFLOW, CLOVER_CSV_SCHEMA, MEMORY_FILE_STRUCTURE, PRD, day3) |
+| 2026-02-10 | Clover billing status lifecycle | CLOVER_CSV_SCHEMA.md §2 (Billed, On Hold, Collected, Deposited, Refund, Canceled, Failed); INGESTION_WORKFLOW + DATA_MODEL_SPEC aligned; parser: STATUS_OTHER (Canceled/Failed→OTHER), "ON HOLD"→ONHOLD, regex capture narrowing (parseChargeDate/parseUninstallDate) |
+| 2026-02-10 | @marketbuzz/shared resolution | Build shared package so dist/ exists: `pnpm --filter @marketbuzz/shared build`; API types resolve from package "types" field |
+| 2026-02-10 | MRR & manual outputs doc | docs/MRR_AND_MANUAL_OUTPUTS.md: cadence, MRR definition, manual outputs → canonical tables, two at-risk definitions, most valuable/recurring, performance & cost principles; PRD + AGENTS + DATA_MODEL_SPEC updated |
 
 ---
 
@@ -141,17 +147,27 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 ## Troubleshooting (Day 3 – Lambda)
 | Issue | Cause | Fix (to try) |
 |-------|-------|--------------|
-| Lambda Runtime.Unknown | Handler/module fails to load before execution | Ensure SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, S3_BUCKET_UPLOADS in Lambda env. Try CJS build: remove `--format=esm` and output `ingestion.js` instead of `ingestion.mjs`. |
-| SQS ReceiveMessage permission | Lambda role missing SQS access | Add inline policy with sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes. See `docs/articles/aws-sqs-lambda-ingestion-setup.md`. |
+| Lambda Runtime.Unknown / Init Error | `fileURLToPath(import.meta.url)` is undefined in CJS bundle | In `config.ts`, skip dotenv when `process.env.AWS_LAMBDA_FUNCTION_NAME` is set (Lambda gets env from console). |
+| AWS Access Key "does not exist" | Explicit or inlined credentials in Lambda | In `s3.ts` and `sqs.ts`, use `credentials: undefined` when `AWS_LAMBDA_FUNCTION_NAME` is set so SDK uses execution role only. |
+| invalid enum charge_status: ONHOLD | DB enum missing ONHOLD | Run migration `20240210000001_add_charge_status_onhold.sql`; add ONHOLD to shared `ChargeStatus` type. |
+| SQS ReceiveMessage permission | Lambda role missing SQS access | Add inline policy with sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes, s3:GetObject. See `docs/articles/aws-sqs-lambda-ingestion-setup.md`. |
 | AWS_REGION env var error | Lambda reserves AWS_REGION | Do not set AWS_REGION in Lambda env; Lambda provides it automatically. |
 
+## Troubleshooting (Monorepo / API)
+| Issue | Cause | Fix (to try) |
+|-------|-------|---------------|
+| Cannot find module '@marketbuzz/shared' | Shared package types point to dist/; dist not built | Run `pnpm --filter @marketbuzz/shared build` from repo root so `packages/shared/dist` exists. |
+| Type 'undefined' cannot be used as an index type (parser) | Regex capture groups m[1], m[2], m[3] are `string \| undefined` | Assign to variables, check for undefined, then use (narrows to string). |
+
 ## Blockers / Notes
-- **Lambda Runtime.Unknown:** Ingestion Lambda fails with `Error Type: Runtime.Unknown` (~453ms). API→SQS→Lambda trigger works; Lambda receives message but crashes before handler runs. Pause: try CJS build, verify env vars, or run pipeline locally/sync for MVP.
+- **Ingestion pipeline:** Working. Day 3 fixes applied: config.ts (skip dotenv in Lambda), s3/sqs (role-only credentials in Lambda), ONHOLD in enum + docs, pipeline error serialization for CloudWatch.
+- **Clover lifecycle:** Documented in CLOVER_CSV_SCHEMA.md §2; parser maps Canceled/Failed→OTHER, normalizes "ON HOLD" to ONHOLD.
+- **@marketbuzz/shared:** API type-checking needs shared package built (`pnpm --filter @marketbuzz/shared build`) so dist/ and type declarations exist.
 - OpenAI API key: see setup guide below
 - Cognito: complete. See `docs/login_management.md` for user/password setup
 
 ## Handoff for New Context
-When starting a new chat, say: *"Continue MarketBuzz Compass Day 3: Lambda Runtime.Unknown blocker. Ingestion pipeline code is done (parser, upsert, recompute); API→SQS→Lambda wired. Lambda fails with Runtime.Unknown before handler runs. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/articles/aws-sqs-lambda-ingestion-setup.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
+When starting a new chat, say: *"Continue MarketBuzz Compass. Day 3 ingestion pipeline is complete (API→SQS→Lambda→Supabase). Next: MVP metrics endpoints, merchant list, brief placeholder, then frontend auth + Monthly Brief. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
 
 ---
 

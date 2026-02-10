@@ -73,6 +73,7 @@ Human and AI agents working on this project should follow this guide for consist
 | Topic | Doc |
 |-------|-----|
 | Product & data model | `docs/PRD.md`, `docs/DATA_MODEL_SPEC.md` |
+| MRR, manual outputs, two at-risk definitions | `docs/MRR_AND_MANUAL_OUTPUTS.md` |
 | Ingestion | `docs/INGESTION_WORKFLOW.md` |
 | Clover CSV input | `docs/CLOVER_CSV_SCHEMA.md` |
 | Supabase & RLS | `docs/progressql_supabase_rsl_decisions.md` |

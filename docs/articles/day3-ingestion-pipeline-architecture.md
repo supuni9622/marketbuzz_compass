@@ -158,7 +158,7 @@ The pipeline runs **asynchronously** via **SQS → Lambda**, so the API returns 
                                   │
                                   │  Parse + Normalize
                                   │  • charge_month = YYYY-MM-01
-                                  │  • status_current: REFUNDED → REFUND
+                                  │  • status_current: REFUNDED → REFUND; BILLED, ONHOLD, COLLECTED, DEPOSITED kept as-is (ONHOLD for future calculations)
                                   │  • amount: decimal
                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐

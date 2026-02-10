@@ -3,8 +3,8 @@
  * @see docs/DATA_MODEL_SPEC.md
  */
 
-/** Charge status from Clover (normalized) */
-export type ChargeStatus = "BILLED" | "COLLECTED" | "DEPOSITED" | "REFUND" | "OTHER";
+/** Charge status from Clover (normalized). ONHOLD = billed but not yet collected/deposited. */
+export type ChargeStatus = "BILLED" | "COLLECTED" | "DEPOSITED" | "ONHOLD" | "REFUND" | "OTHER";
 
 /** Merchant lifecycle state */
 export type LifecycleState = "Active" | "AtRisk" | "Lost";
