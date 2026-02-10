@@ -32,6 +32,49 @@ function merchantRowsToCsv(rows: MerchantRow[]): string {
   return lines.join("\r\n");
 }
 
+interface RefundRow {
+  month: string;
+  merchant_id: string;
+  merchant_name: string;
+  app_id: string;
+  refund_amount: number;
+  charge_id: string;
+}
+
+function refundRowsToCsv(rows: RefundRow[]): string {
+  const header = ["Month", "Merchant ID", "Merchant Name", "App ID", "Refund Amount", "Charge ID"];
+  const lines = [header.map(escapeCsvCell).join(",")];
+  for (const r of rows) {
+    lines.push(
+      [r.month, r.merchant_id, r.merchant_name, r.app_id, String(r.refund_amount), r.charge_id].map(
+        escapeCsvCell
+      ).join(",")
+    );
+  }
+  return lines.join("\r\n");
+}
+
+interface UninstallRow {
+  uninstall_month: string;
+  merchant_id: string;
+  merchant_name: string;
+  app_id: string;
+  uninstall_date: string;
+}
+
+function uninstallRowsToCsv(rows: UninstallRow[]): string {
+  const header = ["Uninstall Month", "Merchant ID", "Merchant Name", "App ID", "Uninstall Date"];
+  const lines = [header.map(escapeCsvCell).join(",")];
+  for (const r of rows) {
+    lines.push(
+      [r.uninstall_month, r.merchant_id, r.merchant_name, r.app_id, r.uninstall_date].map(
+        escapeCsvCell
+      ).join(",")
+    );
+  }
+  return lines.join("\r\n");
+}
+
 function downloadCsv(csv: string, filename: string): void {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -49,6 +92,20 @@ interface LifecycleResponse {
   total_rows: number;
 }
 
+interface RefundsResponse {
+  data: RefundRow[];
+  page: number;
+  page_size: number;
+  total_rows: number;
+}
+
+interface UninstallsResponse {
+  data: UninstallRow[];
+  page: number;
+  page_size: number;
+  total_rows: number;
+}
+
 const PAGE_SIZE = 25;
 
 export function ActionCenterTables() {
@@ -56,6 +113,8 @@ export function ActionCenterTables() {
   const { monthApi, appId } = useFilters();
   const [atRiskPage, setAtRiskPage] = useState(1);
   const [lostPage, setLostPage] = useState(1);
+  const [refundsPage, setRefundsPage] = useState(1);
+  const [uninstallsPage, setUninstallsPage] = useState(1);
 
   const atRiskQuery = useQuery({
     queryKey: ["merchants", "lifecycle", monthApi, appId, "AtRisk", atRiskPage],
@@ -85,6 +144,32 @@ export function ActionCenterTables() {
     },
   });
 
+  const refundsQuery = useQuery({
+    queryKey: ["merchants", "refunds", monthApi, appId, refundsPage],
+    queryFn: () => {
+      const params: Record<string, string> = {
+        month: monthApi,
+        page: String(refundsPage),
+        page_size: String(PAGE_SIZE),
+      };
+      if (appId) params.app_id = appId;
+      return api.get<RefundsResponse>("/merchants/refunds", params);
+    },
+  });
+
+  const uninstallsQuery = useQuery({
+    queryKey: ["merchants", "uninstalls", monthApi, appId, uninstallsPage],
+    queryFn: () => {
+      const params: Record<string, string> = {
+        month: monthApi,
+        page: String(uninstallsPage),
+        page_size: String(PAGE_SIZE),
+      };
+      if (appId) params.app_id = appId;
+      return api.get<UninstallsResponse>("/merchants/uninstalls", params);
+    },
+  });
+
   return (
     <section className="mt-8" aria-label="Action Center">
       <h2 className="text-lg font-semibold text-slate-800">Action Center</h2>
@@ -106,6 +191,22 @@ export function ActionCenterTables() {
             onPageChange={setLostPage}
             currentPage={lostPage}
             exportLabel="lost"
+          />
+        </div>
+        <div>
+          <h3 className="mb-2 text-sm font-medium text-slate-700">Refunds</h3>
+          <RefundTable
+            query={refundsQuery}
+            onPageChange={setRefundsPage}
+            currentPage={refundsPage}
+          />
+        </div>
+        <div>
+          <h3 className="mb-2 text-sm font-medium text-slate-700">Uninstalls</h3>
+          <UninstallTable
+            query={uninstallsQuery}
+            onPageChange={setUninstallsPage}
+            currentPage={uninstallsPage}
           />
         </div>
       </div>
@@ -222,6 +323,196 @@ function MerchantTable({
             )}
           </div>
         </div>
+    </div>
+  );
+}
+
+function RefundTable({
+  query,
+  onPageChange,
+  currentPage,
+}: {
+  query: { data?: RefundsResponse; isLoading: boolean; error: Error | null };
+  onPageChange: (p: number) => void;
+  currentPage: number;
+}) {
+  const { data, isLoading, error } = query;
+  if (isLoading) {
+    return (
+      <div className="overflow-hidden rounded-lg border border-slate-200">
+        <div className="h-48 animate-pulse bg-slate-100" />
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700" role="alert">
+        Failed to load. {error.message}
+      </div>
+    );
+  }
+  if (!data || data.data.length === 0) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-slate-600">
+        No refunds in this month.
+      </div>
+    );
+  }
+  const totalPages = Math.ceil(data.total_rows / data.page_size);
+  return (
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200 text-sm">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-4 py-2 text-left font-medium text-slate-700">Merchant</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-700">App</th>
+              <th className="px-4 py-2 text-right font-medium text-slate-700">Refund Amount</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200">
+            {data.data.map((row, i) => (
+              <tr key={`${row.charge_id}-${i}`} className="hover:bg-slate-50">
+                <td className="px-4 py-2 text-slate-800">{row.merchant_name}</td>
+                <td className="px-4 py-2 text-slate-600">{row.app_id}</td>
+                <td className="px-4 py-2 text-right text-slate-800">
+                  {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(row.refund_amount)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 px-4 py-2">
+        <p className="text-xs text-slate-500">
+          Page {data.page} of {totalPages} ({data.total_rows} total)
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              downloadCsv(refundRowsToCsv(data.data), `merchants-refunds-page${data.page}.csv`);
+            }}
+            className="rounded border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100"
+          >
+            Export CSV
+          </button>
+          {totalPages > 1 && (
+            <>
+              <button
+                type="button"
+                disabled={data.page <= 1}
+                onClick={() => onPageChange(currentPage - 1)}
+                className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={data.page >= totalPages}
+                onClick={() => onPageChange(currentPage + 1)}
+                className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+              >
+                Next
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UninstallTable({
+  query,
+  onPageChange,
+  currentPage,
+}: {
+  query: { data?: UninstallsResponse; isLoading: boolean; error: Error | null };
+  onPageChange: (p: number) => void;
+  currentPage: number;
+}) {
+  const { data, isLoading, error } = query;
+  if (isLoading) {
+    return (
+      <div className="overflow-hidden rounded-lg border border-slate-200">
+        <div className="h-48 animate-pulse bg-slate-100" />
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700" role="alert">
+        Failed to load. {error.message}
+      </div>
+    );
+  }
+  if (!data || data.data.length === 0) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-slate-600">
+        No uninstalls in this month.
+      </div>
+    );
+  }
+  const totalPages = Math.ceil(data.total_rows / data.page_size);
+  return (
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200 text-sm">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-4 py-2 text-left font-medium text-slate-700">Merchant</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-700">App</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-700">Uninstall Date</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200">
+            {data.data.map((row) => (
+              <tr key={`${row.merchant_id}-${row.app_id}`} className="hover:bg-slate-50">
+                <td className="px-4 py-2 text-slate-800">{row.merchant_name}</td>
+                <td className="px-4 py-2 text-slate-600">{row.app_id}</td>
+                <td className="px-4 py-2 text-slate-600">{row.uninstall_date}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 px-4 py-2">
+        <p className="text-xs text-slate-500">
+          Page {data.page} of {totalPages} ({data.total_rows} total)
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              downloadCsv(uninstallRowsToCsv(data.data), `merchants-uninstalls-page${data.page}.csv`);
+            }}
+            className="rounded border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100"
+          >
+            Export CSV
+          </button>
+          {totalPages > 1 && (
+            <>
+              <button
+                type="button"
+                disabled={data.page <= 1}
+                onClick={() => onPageChange(currentPage - 1)}
+                className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={data.page >= totalPages}
+                onClick={() => onPageChange(currentPage + 1)}
+                className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+              >
+                Next
+              </button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -2,8 +2,8 @@
 
 **Last updated:** 2026-02-10  
 **Current phase:** MVP  
-**Status:** MVP frontend implemented: Cognito Hosted UI (PKCE), global filters (Month, Compare, App), KPI strip, narrative, Action Center tables, Admin CSV upload UI with route guard. Theme: teal accent, slate neutrals, semantic colors.  
-**Next task:** Refunds/Uninstalls tables (when API added), Copy link / deep links, then Phase 1 Nova.
+**Status:** MVP frontend complete: Cognito Hosted UI (PKCE), global filters (Month, Compare, App), KPI strip, narrative, Scorecards + sparklines, Action Center tables (At Risk, Lost, Refunds, Uninstalls) with Export CSV, Copy link (deep links), Admin CSV upload UI + upload status, Nova animations. Theme: teal accent, slate neutrals, semantic colors.  
+**Next task:** Phase 1 Nova (OpenAI, memory, tools, chat, growth plan).
 
 ---
 
@@ -66,8 +66,9 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] Narrative from API — wire GET /brief (NarrativeBlock content + placeholder flag)
 - [x] Scorecards + sparklines (3 cards: Gross Billed, Active, Refunded; minimal 2-point bar; same KPI data)
 - [x] Action Center tables (At Risk, Lost) — wire GET /merchants/lifecycle; pagination
-- [ ] Refunds/Uninstalls tables (when API endpoints added)
-- [x] Export CSV (Action Center: Export current page as CSV for At Risk / Lost)
+- [x] Refunds/Uninstalls tables (GET /merchants/refunds, GET /merchants/uninstalls; Action Center sections + Export CSV)
+- [x] Export CSV (Action Center: Export current page as CSV for At Risk, Lost, Refunds, Uninstalls)
+- [x] Copy link / deep links (Copy link button in GlobalFilters; URL restores month, compare, app)
 
 ### 7. Admin
 - [x] Admin route guard (layout checks isAdmin)
@@ -150,6 +151,8 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-10 | Export CSV | Action Center tables: Export CSV button per table (At Risk, Lost); downloads current page as CSV (merchant_id, merchant_name, app_id, app_name, lifecycle_state, month). |
 | 2026-02-10 | Nova animations | globals.css: entrance (fade-in), updating (pulse), new content (highlight); prefers-reduced-motion disables. NarrativeBlock: isUpdating, hasNewContent; BriefSection shows NarrativeBlock when loading with pulse. |
 | 2026-02-10 | Scorecards + sparklines | Scorecards.tsx: 3 cards (Gross Billed, Active, Refunded) with value + Δ + Δ%; minimal 2-point bar (compare → current); shared KPIs query; home page between Brief and Action Center. |
+| 2026-02-10 | Refunds/Uninstalls tables | Backend: GET /merchants/refunds, GET /merchants/uninstalls (paginated, month, app_id). Frontend: RefundTable, UninstallTable in Action Center; Export CSV each. |
+| 2026-02-10 | Copy link / deep links | GlobalFilters: "Copy link" button copies current URL (origin + pathname + params); ensures month, compare, app in URL; "Copied!" feedback 2s. |
 
 ---
 
@@ -185,7 +188,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 ## Handoff for New Context
 When starting a new chat, paste this:
 
-*"Continue MarketBuzz Compass. Backend: GET /metrics/kpis, GET /merchants/lifecycle (paginated), GET /brief (placeholder), POST /admin/upload/csv. Frontend (Next.js, apps/web): Cognito Hosted UI (PKCE), global filters (Month, Compare, App) with URL state, KPI strip → /metrics/kpis, narrative → GET /brief, Action Center tables (At Risk, Lost) → /merchants/lifecycle, Admin CSV upload UI with route guard. Theme: teal accent, slate neutrals, semantic colors. Next: scorecards/sparklines, Refunds/Uninstalls tables when API added, upload status display, Nova animations (BRAND_AND_UI.md). Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
+*"Continue MarketBuzz Compass. Backend: GET /metrics/kpis, GET /merchants/lifecycle, GET /merchants/refunds, GET /merchants/uninstalls (paginated), GET /brief (placeholder), POST /admin/upload/csv, GET /admin/uploads. Frontend: Cognito Hosted UI (PKCE), global filters + Copy link (deep links), KPI strip, narrative, Scorecards, Action Center (At Risk, Lost, Refunds, Uninstalls) with Export CSV, Admin upload + status, Nova animations. Next: Phase 1 Nova. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web."*
 
 ---
 

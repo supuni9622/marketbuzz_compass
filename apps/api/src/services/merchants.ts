@@ -79,3 +79,139 @@ export async function listMerchantsLifecycle(
     total_rows: totalRows,
   };
 }
+
+export interface RefundMerchantRow {
+  month: string;
+  merchant_id: string;
+  merchant_name: string;
+  app_id: string;
+  refund_amount: number;
+  charge_id: string;
+}
+
+export interface RefundListResponse {
+  data: RefundMerchantRow[];
+  page: number;
+  page_size: number;
+  total_rows: number;
+}
+
+/**
+ * List refund merchants from refund_merchants_monthly (paginated).
+ */
+export async function listRefundMerchants(
+  supabase: SupabaseClient,
+  params: {
+    month: MonthDate;
+    app_id?: string;
+    page?: number;
+    page_size?: number;
+  }
+): Promise<RefundListResponse> {
+  const month = toMonthDate(params.month);
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(1, params.page_size ?? DEFAULT_PAGE_SIZE)
+  );
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let q = supabase
+    .from("refund_merchants_monthly")
+    .select("month, merchant_id, merchant_name, app_id, refund_amount, charge_id", {
+      count: "exact",
+    })
+    .eq("month", month)
+    .order("merchant_id", { ascending: true })
+    .order("app_id", { ascending: true })
+    .order("charge_id", { ascending: true })
+    .range(from, to);
+
+  if (params.app_id) q = q.eq("app_id", params.app_id);
+
+  const { data, count, error } = await q;
+  if (error) throw error;
+
+  const rows = (data ?? []) as RefundMerchantRow[];
+  const totalRows = count ?? 0;
+
+  return {
+    data: rows.map((r) => ({
+      ...r,
+      month: String(r.month).slice(0, 10),
+      refund_amount: Number(r.refund_amount),
+    })),
+    page,
+    page_size: pageSize,
+    total_rows: totalRows,
+  };
+}
+
+export interface UninstallMerchantRow {
+  uninstall_month: string;
+  merchant_id: string;
+  merchant_name: string;
+  app_id: string;
+  uninstall_date: string;
+}
+
+export interface UninstallListResponse {
+  data: UninstallMerchantRow[];
+  page: number;
+  page_size: number;
+  total_rows: number;
+}
+
+/**
+ * List uninstall merchants from uninstall_merchants_monthly (paginated).
+ */
+export async function listUninstallMerchants(
+  supabase: SupabaseClient,
+  params: {
+    month: MonthDate;
+    app_id?: string;
+    page?: number;
+    page_size?: number;
+  }
+): Promise<UninstallListResponse> {
+  const month = toMonthDate(params.month);
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(1, params.page_size ?? DEFAULT_PAGE_SIZE)
+  );
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let q = supabase
+    .from("uninstall_merchants_monthly")
+    .select("uninstall_month, merchant_id, merchant_name, app_id, uninstall_date", {
+      count: "exact",
+    })
+    .eq("uninstall_month", month)
+    .order("merchant_id", { ascending: true })
+    .order("app_id", { ascending: true })
+    .range(from, to);
+
+  if (params.app_id) q = q.eq("app_id", params.app_id);
+
+  const { data, count, error } = await q;
+  if (error) throw error;
+
+  const rows = (data ?? []) as UninstallMerchantRow[];
+  const totalRows = count ?? 0;
+
+  return {
+    data: rows.map((r) => ({
+      uninstall_month: String(r.uninstall_month).slice(0, 10),
+      merchant_id: r.merchant_id,
+      merchant_name: r.merchant_name,
+      app_id: r.app_id,
+      uninstall_date: String(r.uninstall_date).slice(0, 10),
+    })),
+    page,
+    page_size: pageSize,
+    total_rows: totalRows,
+  };
+}

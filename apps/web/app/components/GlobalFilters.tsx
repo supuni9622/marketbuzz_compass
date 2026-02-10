@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { getCurrentMonth, getPreviousMonth, APP_OPTIONS } from "@/lib/filters";
 
 const MONTH_OPTIONS = (() => {
@@ -22,10 +22,28 @@ export function GlobalFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   const month = searchParams.get("month") ?? getCurrentMonth();
   const compareMonth = searchParams.get("compare") ?? getPreviousMonth(month);
   const appId = searchParams.get("app") ?? "";
+
+  const copyLink = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (!params.has("month")) params.set("month", month);
+    if (!params.has("compare")) params.set("compare", compareMonth);
+    if (appId && !params.has("app")) params.set("app", appId);
+    const query = params.toString();
+    const url = `${window.location.origin}${pathname}${query ? `?${query}` : ""}`;
+    navigator.clipboard.writeText(url).then(
+      () => {
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2000);
+      },
+      () => {}
+    );
+  }, [pathname, searchParams, month, compareMonth, appId]);
 
   const setParams = useCallback(
     (updates: { month?: string; compare?: string; app?: string }) => {
@@ -95,6 +113,16 @@ export function GlobalFilters() {
               </option>
             ))}
           </select>
+        </div>
+        <div className="ml-auto">
+          <button
+            type="button"
+            onClick={copyLink}
+            className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            title="Copy link to this view (current filters)"
+          >
+            {copyFeedback ? "Copied!" : "Copy link"}
+          </button>
         </div>
       </div>
     </header>
