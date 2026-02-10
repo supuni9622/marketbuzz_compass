@@ -43,8 +43,8 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] CSV upload endpoint (validate, store S3, enqueue)
 - [x] SQS queue + Lambda handler (SQS created, Lambda created, code deployed)
 - [x] Lambda ingestion worker (init fix, role-only credentials, ONHOLD enum; pipeline running)
-- [ ] Metrics endpoints (KPIs, MoM compare)
-- [ ] Merchant list endpoints (paginated)
+- [x] Metrics endpoints (KPIs, MoM compare: current, compare, delta, delta_pct)
+- [x] Merchant list endpoints (paginated)
 - [ ] Brief endpoint (placeholder narrative)
 
 ### 5. Ingestion Pipeline
@@ -134,6 +134,8 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-10 | Clover billing status lifecycle | CLOVER_CSV_SCHEMA.md §2 (Billed, On Hold, Collected, Deposited, Refund, Canceled, Failed); INGESTION_WORKFLOW + DATA_MODEL_SPEC aligned; parser: STATUS_OTHER (Canceled/Failed→OTHER), "ON HOLD"→ONHOLD, regex capture narrowing (parseChargeDate/parseUninstallDate) |
 | 2026-02-10 | @marketbuzz/shared resolution | Build shared package so dist/ exists: `pnpm --filter @marketbuzz/shared build`; API types resolve from package "types" field |
 | 2026-02-10 | MRR & manual outputs doc | docs/MRR_AND_MANUAL_OUTPUTS.md: cadence, MRR definition, manual outputs → canonical tables, two at-risk definitions, most valuable/recurring, performance & cost principles; PRD + AGENTS + DATA_MODEL_SPEC updated |
+| 2026-02-10 | Metrics endpoint GET /metrics/kpis | month (required), compare_month (optional, default prev), app_id (optional); every KPI: current, compare, delta, delta_pct; auth required |
+| 2026-02-10 | Merchant list GET /merchants/lifecycle | month (required), app_id, lifecycle_state (Active/AtRisk/Lost), page, page_size; response: data, page, page_size, total_rows; auth required |
 
 ---
 
