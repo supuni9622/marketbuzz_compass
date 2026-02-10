@@ -14,6 +14,34 @@ interface MerchantRow {
   lifecycle_state: string;
 }
 
+function escapeCsvCell(value: string): string {
+  if (/[",\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
+  return value;
+}
+
+function merchantRowsToCsv(rows: MerchantRow[]): string {
+  const header = ["Month", "Merchant ID", "Merchant Name", "App ID", "App Name", "Lifecycle State"];
+  const lines = [header.map(escapeCsvCell).join(",")];
+  for (const r of rows) {
+    lines.push(
+      [r.month, r.merchant_id, r.merchant_name, r.app_id, r.app_name, r.lifecycle_state].map(
+        escapeCsvCell
+      ).join(",")
+    );
+  }
+  return lines.join("\r\n");
+}
+
+function downloadCsv(csv: string, filename: string): void {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 interface LifecycleResponse {
   data: MerchantRow[];
   page: number;
@@ -68,6 +96,7 @@ export function ActionCenterTables() {
             query={atRiskQuery}
             onPageChange={setAtRiskPage}
             currentPage={atRiskPage}
+            exportLabel="at-risk"
           />
         </div>
         <div>
@@ -76,6 +105,7 @@ export function ActionCenterTables() {
             query={lostQuery}
             onPageChange={setLostPage}
             currentPage={lostPage}
+            exportLabel="lost"
           />
         </div>
       </div>
@@ -87,10 +117,12 @@ function MerchantTable({
   query,
   onPageChange,
   currentPage,
+  exportLabel,
 }: {
   query: { data?: LifecycleResponse; isLoading: boolean; error: Error | null };
   onPageChange: (p: number) => void;
   currentPage: number;
+  exportLabel: string;
 }) {
   const { data, isLoading, error } = query;
 
@@ -152,31 +184,44 @@ function MerchantTable({
           </tbody>
         </table>
       </div>
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-200 px-4 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 px-4 py-2">
           <p className="text-xs text-slate-500">
             Page {data.page} of {totalPages} ({data.total_rows} total)
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              disabled={data.page <= 1}
-              onClick={() => onPageChange(currentPage - 1)}
-              className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+              onClick={() => {
+                const csv = merchantRowsToCsv(data.data);
+                const filename = `merchants-${exportLabel}-page${data.page}.csv`;
+                downloadCsv(csv, filename);
+              }}
+              className="rounded border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100"
             >
-              Previous
+              Export CSV
             </button>
-            <button
-              type="button"
-              disabled={data.page >= totalPages}
-              onClick={() => onPageChange(currentPage + 1)}
-              className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
-            >
-              Next
-            </button>
+            {totalPages > 1 && (
+              <>
+                <button
+                  type="button"
+                  disabled={data.page <= 1}
+                  onClick={() => onPageChange(currentPage - 1)}
+                  className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  disabled={data.page >= totalPages}
+                  onClick={() => onPageChange(currentPage + 1)}
+                  className="rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-50 hover:bg-slate-100"
+                >
+                  Next
+                </button>
+              </>
+            )}
           </div>
         </div>
-      )}
     </div>
   );
 }

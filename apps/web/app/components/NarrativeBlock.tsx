@@ -7,22 +7,32 @@ export interface NarrativeBlockProps {
   content: string;
   /** When true, show subtle "placeholder" styling */
   placeholder?: boolean;
+  /** When true, show "Nova is updating" pulse on avatar (loading/refetch) */
+  isUpdating?: boolean;
+  /** When true, briefly highlight the text block (new content just loaded) */
+  hasNewContent?: boolean;
 }
 
 /**
  * Monthly Brief narrative: Nova avatar + text. Per BRAND_AND_UI — narrative as spine.
+ * Animations: entrance (fade-in), updating (pulse), new content (highlight); respect prefers-reduced-motion.
  */
-export function NarrativeBlock({ content, placeholder }: NarrativeBlockProps) {
+export function NarrativeBlock({
+  content,
+  placeholder,
+  isUpdating,
+  hasNewContent,
+}: NarrativeBlockProps) {
   return (
     <section
-      className="flex gap-4 rounded-lg border border-slate-200 bg-slate-50/80 p-4"
+      className={`nova-entrance flex gap-4 rounded-lg border border-slate-200 bg-slate-50/80 p-4 ${isUpdating ? "nova-updating" : ""}`}
       aria-label="Nova monthly brief"
     >
       <NovaAvatar />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-teal-600">Nova</p>
         <div
-          className="mt-1 whitespace-pre-wrap text-slate-800"
+          className={`mt-1 rounded px-1 py-0.5 whitespace-pre-wrap text-slate-800 ${hasNewContent ? "nova-new-content-block" : ""}`}
           style={{ fontFamily: "inherit" }}
         >
           {content}

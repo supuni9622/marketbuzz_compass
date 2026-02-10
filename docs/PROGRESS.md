@@ -3,7 +3,7 @@
 **Last updated:** 2026-02-10  
 **Current phase:** MVP  
 **Status:** MVP frontend implemented: Cognito Hosted UI (PKCE), global filters (Month, Compare, App), KPI strip, narrative, Action Center tables, Admin CSV upload UI with route guard. Theme: teal accent, slate neutrals, semantic colors.  
-**Next task:** Scorecards + sparklines, Export CSV, Nova animations (BRAND_AND_UI.md).
+**Next task:** Refunds/Uninstalls tables (when API added), Copy link / deep links, then Phase 1 Nova.
 
 ---
 
@@ -64,10 +64,10 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [x] Global filters (Month, Compare, App) — URL state, sticky bar
 - [x] KPI strip (Gross Billed, Active, Refunded) — wire GET /metrics/kpis
 - [x] Narrative from API — wire GET /brief (NarrativeBlock content + placeholder flag)
-- [ ] Scorecards + sparklines
+- [x] Scorecards + sparklines (3 cards: Gross Billed, Active, Refunded; minimal 2-point bar; same KPI data)
 - [x] Action Center tables (At Risk, Lost) — wire GET /merchants/lifecycle; pagination
 - [ ] Refunds/Uninstalls tables (when API endpoints added)
-- [ ] Export CSV
+- [x] Export CSV (Action Center: Export current page as CSV for At Risk / Lost)
 
 ### 7. Admin
 - [x] Admin route guard (layout checks isAdmin)
@@ -147,6 +147,9 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-10 | Global filters + KPI + Brief + Action Center | GlobalFilters (Month, Compare, App) with URL state; KpiStrip → GET /metrics/kpis; BriefSection → GET /brief; ActionCenterTables (At Risk, Lost) → GET /merchants/lifecycle with pagination; useFilters, useApiClient. |
 | 2026-02-10 | Admin CSV upload UI | Admin layout (isAdmin guard), Admin page with file input and POST /admin/upload/csv; success/error feedback. Theme: teal accent, slate neutrals, semantic green/amber/red in KPI strip and tables. |
 | 2026-02-10 | Upload status display | GET /admin/uploads (list ingestion_uploads with latest run status); Admin page UploadStatusList component; invalidate on new upload. |
+| 2026-02-10 | Export CSV | Action Center tables: Export CSV button per table (At Risk, Lost); downloads current page as CSV (merchant_id, merchant_name, app_id, app_name, lifecycle_state, month). |
+| 2026-02-10 | Nova animations | globals.css: entrance (fade-in), updating (pulse), new content (highlight); prefers-reduced-motion disables. NarrativeBlock: isUpdating, hasNewContent; BriefSection shows NarrativeBlock when loading with pulse. |
+| 2026-02-10 | Scorecards + sparklines | Scorecards.tsx: 3 cards (Gross Billed, Active, Refunded) with value + Δ + Δ%; minimal 2-point bar (compare → current); shared KPIs query; home page between Brief and Action Center. |
 
 ---
 

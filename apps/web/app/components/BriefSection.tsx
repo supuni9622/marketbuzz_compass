@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
@@ -14,26 +15,27 @@ interface BriefResponse {
 export function BriefSection() {
   const api = useApiClient();
   const { monthApi } = useFilters();
+  const [hasNewContent, setHasNewContent] = useState(false);
+  const prevPlaceholderRef = useRef<boolean | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["brief", monthApi],
     queryFn: () => api.get<BriefResponse>("/brief", { month: monthApi }),
   });
 
-  if (isLoading) {
-    return (
-      <section className="mt-6" aria-label="Monthly Brief loading">
-        <div className="flex gap-4 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-          <div className="h-14 w-14 shrink-0 animate-pulse rounded-full bg-slate-200" />
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
-            <div className="h-4 w-full animate-pulse rounded bg-slate-200" />
-            <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const placeholder = data?.placeholder ?? true;
+  const content = data?.brief_markdown ?? "Summary pending — Nova coming soon.";
+
+  useEffect(() => {
+    if (isLoading) return;
+    const wasPlaceholder = prevPlaceholderRef.current;
+    prevPlaceholderRef.current = placeholder;
+    if ((wasPlaceholder === true || wasPlaceholder === null) && !placeholder) {
+      setHasNewContent(true);
+      const t = setTimeout(() => setHasNewContent(false), 700);
+      return () => clearTimeout(t);
+    }
+  }, [isLoading, placeholder]);
 
   if (error) {
     return (
@@ -45,14 +47,16 @@ export function BriefSection() {
     );
   }
 
-  const content = data?.brief_markdown ?? "Summary pending — Nova coming soon.";
-  const placeholder = data?.placeholder ?? true;
-
   return (
     <section className="mt-6" aria-label="Monthly Brief">
       <h2 className="text-lg font-semibold text-slate-800">MarketBuzz Monthly Brief</h2>
       <div className="mt-4">
-        <NarrativeBlock content={content} placeholder={placeholder} />
+        <NarrativeBlock
+          content={content}
+          placeholder={placeholder}
+          isUpdating={isLoading}
+          hasNewContent={hasNewContent}
+        />
       </div>
     </section>
   );
