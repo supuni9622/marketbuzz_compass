@@ -38,6 +38,115 @@ function validateCsvHeaders(headers: string[]): { ok: boolean; error?: string } 
 }
 
 export async function adminUploadRoutes(app: FastifyInstance): Promise<void> {
+  // List recent uploads with run status (Admin only)
+  app.get(
+    "/uploads",
+    {
+      preHandler: [authMiddleware, requireAdmin],
+      schema: {
+        description: "List recent ingestion uploads with run status. Admin only.",
+        tags: ["Admin"],
+        querystring: {
+          type: "object",
+          properties: {
+            limit: { type: "integer", minimum: 1, maximum: 100, default: 25 },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              data: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    upload_id: { type: "string" },
+                    uploaded_at: { type: "string" },
+                    uploaded_by_email: { type: ["string", "null"] },
+                    status: { type: "string" },
+                    rows_received: { type: ["integer", "null"] },
+                    months_detected: { type: ["array", "null"] },
+                    error_message: { type: ["string", "null"] },
+                    run: {
+                      type: ["object", "null"],
+                      properties: {
+                        run_id: { type: "string" },
+                        started_at: { type: "string" },
+                        finished_at: { type: ["string", "null"] },
+                        inserted_count: { type: ["integer", "null"] },
+                        updated_count: { type: ["integer", "null"] },
+                        skipped_count: { type: ["integer", "null"] },
+                        recompute_status: { type: ["string", "null"] },
+                        nova_status: { type: ["string", "null"] },
+                        error_message: { type: ["string", "null"] },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      if (!db.isConfigured()) {
+        return reply.status(503).send({ error: "Database not configured" });
+      }
+      const q = request.query as { limit?: string };
+      const limit = Math.min(100, Math.max(1, parseInt(q.limit ?? "25", 10) || 25));
+      try {
+        const supabase = db.get();
+        const { data: uploads, error: uploadsError } = await supabase
+          .from("ingestion_uploads")
+          .select("upload_id, uploaded_at, uploaded_by_email, status, rows_received, months_detected, error_message")
+          .order("uploaded_at", { ascending: false })
+          .limit(limit);
+
+        if (uploadsError) {
+          app.log.error({ err: uploadsError }, "Failed to list ingestion_uploads");
+          return reply.status(500).send({ error: "Failed to list uploads" });
+        }
+
+        const list = uploads ?? [];
+        if (list.length === 0) {
+          return reply.send({ data: [] });
+        }
+
+        const uploadIds = list.map((u: { upload_id: string }) => u.upload_id);
+        const { data: runs, error: runsError } = await supabase
+          .from("ingestion_runs")
+          .select("run_id, upload_id, started_at, finished_at, inserted_count, updated_count, skipped_count, recompute_status, nova_status, error_message")
+          .in("upload_id", uploadIds)
+          .order("started_at", { ascending: false });
+
+        if (runsError) {
+          app.log.error({ err: runsError }, "Failed to list ingestion_runs");
+          return reply.send({ data: list.map((u: Record<string, unknown>) => ({ ...u, run: null })) });
+        }
+
+        const runByUpload: Record<string, (typeof runs)[0]> = {};
+        for (const r of runs ?? []) {
+          const uid = r.upload_id as string;
+          if (!runByUpload[uid] || (r.started_at as string) > (runByUpload[uid].started_at as string)) {
+            runByUpload[uid] = r;
+          }
+        }
+
+        const data = list.map((u: Record<string, unknown>) => ({
+          ...u,
+          run: runByUpload[u.upload_id as string] ?? null,
+        }));
+
+        return reply.send({ data });
+      } catch (err) {
+        app.log.error(err);
+        return reply.status(500).send({ error: "Failed to list uploads" });
+      }
+    }
+  );
+
   await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } }); // 50MB
 
   app.post(

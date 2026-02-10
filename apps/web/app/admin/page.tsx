@@ -2,17 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/app/auth/AuthProvider";
+import { UploadStatusList } from "./UploadStatusList";
 
 function getBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL;
-  if (url) return url.replace(/\/$/, "");
-  if (typeof window !== "undefined") return "";
-  return "http://localhost:3001";
+  return url ? url.replace(/\/$/, "") : "http://localhost:3001";
 }
 
 export default function AdminPage() {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>("");
@@ -40,7 +41,11 @@ export default function AdminPage() {
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as {
+        upload_id?: string;
+        rows_received?: number;
+        error?: string;
+      };
       if (!res.ok) {
         setMessage(data.error ?? `Upload failed (${res.status})`);
         setStatus("error");
@@ -51,6 +56,7 @@ export default function AdminPage() {
       );
       setStatus("success");
       setFile(null);
+      void queryClient.invalidateQueries({ queryKey: ["admin", "uploads"] });
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Upload failed");
       setStatus("error");
@@ -74,7 +80,7 @@ export default function AdminPage() {
               type="file"
               accept=".csv"
               onChange={(e) => {
-                const f = e.target.files?.[0];
+                const f = (e.target as HTMLInputElement).files?.[0];
                 setFile(f ?? null);
                 setStatus("idle");
                 setMessage("");
@@ -106,6 +112,8 @@ export default function AdminPage() {
           </div>
         )}
       </section>
+
+      <UploadStatusList />
 
       <p className="mt-6 text-sm text-slate-500">
         <Link href="/" className="text-teal-600 hover:underline">

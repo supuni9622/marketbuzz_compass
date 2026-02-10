@@ -2,7 +2,8 @@
 
 **Last updated:** 2026-02-10  
 **Current phase:** MVP  
-**Status:** MVP frontend implemented: Cognito Hosted UI (PKCE), global filters (Month, Compare, App), KPI strip wired to GET /metrics/kpis, narrative wired to GET /brief, Action Center tables (At Risk, Lost) wired to GET /merchants/lifecycle, Admin CSV upload UI with route guard. Theme: teal accent, slate neutrals, semantic colors. Next: scorecards/sparklines, Refunds/Uninstalls tables when API added, upload status display, Nova animations (entrance, idle, updating, new content).
+**Status:** MVP frontend implemented: Cognito Hosted UI (PKCE), global filters (Month, Compare, App), KPI strip, narrative, Action Center tables, Admin CSV upload UI with route guard. Theme: teal accent, slate neutrals, semantic colors.  
+**Next task:** Scorecards + sparklines, Export CSV, Nova animations (BRAND_AND_UI.md).
 
 ---
 
@@ -71,7 +72,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 ### 7. Admin
 - [x] Admin route guard (layout checks isAdmin)
 - [x] CSV upload UI (POST /admin/upload/csv)
-- [ ] Upload status display
+- [x] Upload status display (GET /admin/uploads, Recent uploads table on Admin page)
 
 ---
 
@@ -145,6 +146,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 | 2026-02-10 | Cognito auth (Hosted UI) | apps/web: PKCE flow, /login redirect to Cognito, /auth/callback exchange code, sessionStorage token; AuthProvider, AuthGuard; API client with Bearer token; .env.example NEXT_PUBLIC_COGNITO_DOMAIN, NEXT_PUBLIC_COGNITO_CLIENT_ID, NEXT_PUBLIC_API_URL. |
 | 2026-02-10 | Global filters + KPI + Brief + Action Center | GlobalFilters (Month, Compare, App) with URL state; KpiStrip → GET /metrics/kpis; BriefSection → GET /brief; ActionCenterTables (At Risk, Lost) → GET /merchants/lifecycle with pagination; useFilters, useApiClient. |
 | 2026-02-10 | Admin CSV upload UI | Admin layout (isAdmin guard), Admin page with file input and POST /admin/upload/csv; success/error feedback. Theme: teal accent, slate neutrals, semantic green/amber/red in KPI strip and tables. |
+| 2026-02-10 | Upload status display | GET /admin/uploads (list ingestion_uploads with latest run status); Admin page UploadStatusList component; invalidate on new upload. |
 
 ---
 
