@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
+import { getErrorMessage } from "@/lib/utils";
 import { useFilters } from "@/app/hooks/useFilters";
 import { NarrativeBlock } from "./NarrativeBlock";
 
@@ -41,7 +42,7 @@ export function BriefSection() {
     return (
       <section className="mt-6" aria-label="Monthly Brief error">
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="alert">
-          Failed to load brief. {error instanceof Error ? error.message : "Unknown error."}
+          Failed to load brief. {getErrorMessage(error)}
         </div>
       </section>
     );

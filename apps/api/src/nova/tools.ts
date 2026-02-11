@@ -8,6 +8,8 @@ import {
   listMerchantsLifecycle,
   listRefundMerchants,
   listUninstallMerchants,
+  listNraMerchants,
+  listHighRiskChurnMerchants,
 } from "../services/merchants.js";
 
 function toMonthDate(value: string): string {
@@ -84,6 +86,46 @@ export async function toolListMerchants(
     return JSON.stringify(
       {
         type: "uninstalled",
+        data: result.data,
+        page: result.page,
+        page_size: result.page_size,
+        total_rows: result.total_rows,
+      },
+      null,
+      2
+    );
+  }
+
+  if (typeLower === "nra") {
+    const result = await listNraMerchants(supabase, {
+      month,
+      app_id: params.app_id,
+      page,
+      page_size: pageSize,
+    });
+    return JSON.stringify(
+      {
+        type: "nra",
+        data: result.data,
+        page: result.page,
+        page_size: result.page_size,
+        total_rows: result.total_rows,
+      },
+      null,
+      2
+    );
+  }
+
+  if (typeLower === "highriskchurn" || typeLower === "high_risk_churn") {
+    const result = await listHighRiskChurnMerchants(supabase, {
+      month,
+      app_id: params.app_id,
+      page,
+      page_size: pageSize,
+    });
+    return JSON.stringify(
+      {
+        type: "high_risk_churn",
         data: result.data,
         page: result.page,
         page_size: result.page_size,

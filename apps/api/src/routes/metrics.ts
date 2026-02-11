@@ -5,7 +5,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { db } from "../db.js";
 import { authMiddleware } from "../auth/middleware.js";
-import { getKpis, getTrend, getMetricsByApp } from "../services/metrics.js";
+import { getKpis, getTrend, getMetricsByApp, type TrendMetric } from "../services/metrics.js";
 
 export async function metricsRoutes(
   app: FastifyInstance,
@@ -133,7 +133,7 @@ export async function metricsRoutes(
           properties: {
             metric: {
               type: "string",
-              enum: ["billed_amount", "active_merchants", "refunded_amount"],
+              enum: ["billed_amount", "active_merchants", "collected_amount", "deposited_amount", "refunded_amount"],
               description: "Metric to trend",
             },
             months_back: {
@@ -173,15 +173,12 @@ export async function metricsRoutes(
         months_back?: string;
         app_id?: string;
       };
-      const metric = q.metric as "billed_amount" | "active_merchants" | undefined;
-      if (
-        metric !== "billed_amount" &&
-        metric !== "active_merchants" &&
-        metric !== "refunded_amount"
-      ) {
+      const metric = q.metric as string | undefined;
+      const validMetrics = ["billed_amount", "active_merchants", "collected_amount", "deposited_amount", "refunded_amount"];
+      if (!metric || !validMetrics.includes(metric)) {
         return reply.status(400).send({
           error:
-            "metric is required and must be billed_amount, active_merchants, or refunded_amount",
+            "metric is required and must be billed_amount, active_merchants, collected_amount, deposited_amount, or refunded_amount",
         });
       }
       if (!db.isConfigured()) {
@@ -191,7 +188,7 @@ export async function metricsRoutes(
         const supabase = db.get();
         const monthsBack = q.months_back ? parseInt(q.months_back, 10) : undefined;
         const result = await getTrend(supabase, {
-          metric: metric as "billed_amount" | "active_merchants" | "refunded_amount",
+          metric: metric as TrendMetric,
           months_back: monthsBack,
           app_id: q.app_id?.trim() || undefined,
         });
@@ -209,7 +206,7 @@ export async function metricsRoutes(
       preHandler: [authMiddleware],
       schema: {
         description:
-          "Metrics by app for a month (billed_amount, active_merchants, refunded_amount per app). For Evidence zone charts.",
+          "Metrics by app for a month (billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount per app). For Evidence zone charts.",
         tags: ["Metrics"],
         querystring: {
           type: "object",
@@ -224,6 +221,28 @@ export async function metricsRoutes(
             properties: {
               month: { type: "string" },
               billed_amount: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    app_id: { type: "string" },
+                    app_name: { type: "string" },
+                    value: { type: "number" },
+                  },
+                },
+              },
+              collected_amount: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    app_id: { type: "string" },
+                    app_name: { type: "string" },
+                    value: { type: "number" },
+                  },
+                },
+              },
+              deposited_amount: {
                 type: "array",
                 items: {
                   type: "object",

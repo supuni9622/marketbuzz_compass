@@ -142,18 +142,25 @@ export interface TrendPoint {
   value: number;
 }
 
+export type TrendMetric =
+  | "billed_amount"
+  | "active_merchants"
+  | "collected_amount"
+  | "deposited_amount"
+  | "refunded_amount";
+
 export interface TrendResponse {
-  metric: "billed_amount" | "active_merchants" | "refunded_amount";
+  metric: TrendMetric;
   points: TrendPoint[];
 }
 
 /**
- * Get trend over last N months: billed_amount, active_merchants, or refunded_amount from canonical tables.
+ * Get trend over last N months: billed_amount, active_merchants, collected_amount, deposited_amount, or refunded_amount from canonical tables.
  */
 export async function getTrend(
   supabase: SupabaseClient,
   params: {
-    metric: "billed_amount" | "active_merchants" | "refunded_amount";
+    metric: TrendMetric;
     months_back?: number;
     app_id?: string;
   }
@@ -181,11 +188,24 @@ export async function getTrend(
   for (const month of months) {
     const row = await aggregateMrl(supabase, month, params.app_id);
     const value =
-      params.metric === "refunded_amount" ? row.refunded_amount : row.billed_amount;
+      params.metric === "refunded_amount"
+        ? row.refunded_amount
+        : params.metric === "collected_amount"
+          ? row.collected_amount
+          : params.metric === "deposited_amount"
+            ? row.deposited_amount
+            : row.billed_amount;
     points.push({ month, value });
   }
   return {
-    metric: params.metric === "refunded_amount" ? "refunded_amount" : "billed_amount",
+    metric:
+      params.metric === "refunded_amount"
+        ? "refunded_amount"
+        : params.metric === "collected_amount"
+          ? "collected_amount"
+          : params.metric === "deposited_amount"
+            ? "deposited_amount"
+            : "billed_amount",
     points,
   };
 }
@@ -199,6 +219,8 @@ export interface ByAppRow {
 export interface MetricsByAppResponse {
   month: MonthDate;
   billed_amount: ByAppRow[];
+  collected_amount: ByAppRow[];
+  deposited_amount: ByAppRow[];
   active_merchants: ByAppRow[];
   refunded_amount: ByAppRow[];
 }
@@ -214,7 +236,7 @@ export async function getMetricsByApp(
 
   const { data: mrlRows, error: mrlError } = await supabase
     .from("monthly_revenue_lifecycle")
-    .select("app_id, app_name, billed_amount, refunded_amount")
+    .select("app_id, app_name, billed_amount, collected_amount, deposited_amount, refunded_amount")
     .eq("month", m);
   if (mrlError) throw mrlError;
 
@@ -222,6 +244,16 @@ export async function getMetricsByApp(
     app_id: r.app_id,
     app_name: r.app_name ?? r.app_id,
     value: Number(r.billed_amount ?? 0),
+  }));
+  const collected_amount: ByAppRow[] = (mrlRows ?? []).map((r: { app_id: string; app_name: string; collected_amount: number }) => ({
+    app_id: r.app_id,
+    app_name: r.app_name ?? r.app_id,
+    value: Number(r.collected_amount ?? 0),
+  }));
+  const deposited_amount: ByAppRow[] = (mrlRows ?? []).map((r: { app_id: string; app_name: string; deposited_amount: number }) => ({
+    app_id: r.app_id,
+    app_name: r.app_name ?? r.app_id,
+    value: Number(r.deposited_amount ?? 0),
   }));
   const refunded_amount: ByAppRow[] = (mrlRows ?? []).map((r: { app_id: string; app_name: string; refunded_amount: number }) => ({
     app_id: r.app_id,
@@ -249,5 +281,5 @@ export async function getMetricsByApp(
     value: count,
   }));
 
-  return { month: m, billed_amount, active_merchants, refunded_amount };
+  return { month: m, billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount };
 }

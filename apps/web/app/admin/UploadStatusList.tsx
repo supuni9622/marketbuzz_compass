@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
+import { getErrorMessage } from "@/lib/utils";
 
 interface RunRow {
   run_id: string;
@@ -116,7 +117,7 @@ export function UploadStatusList() {
       <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-600 dark:bg-slate-800">
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Recent uploads</h2>
         <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300" role="alert">
-          Failed to load uploads. {error instanceof Error ? error.message : "Unknown error."}
+          Failed to load uploads. {getErrorMessage(error)}
         </div>
       </div>
     );

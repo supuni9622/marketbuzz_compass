@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
+import { getErrorMessage } from "@/lib/utils";
 
 interface MetricWithCompare {
   current: number;
@@ -16,6 +17,8 @@ interface KpisResponse {
   compare_month: string;
   billed_amount: MetricWithCompare;
   billed_count: MetricWithCompare;
+  collected_amount: MetricWithCompare;
+  deposited_amount: MetricWithCompare;
   active_merchants: MetricWithCompare;
   refunded_amount: MetricWithCompare;
 }
@@ -61,8 +64,8 @@ export function KpiStrip() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="KPI strip loading">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5" aria-label="KPI strip loading">
+        {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="h-24 animate-pulse rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-600 dark:bg-slate-700" />
         ))}
       </div>
@@ -72,17 +75,17 @@ export function KpiStrip() {
   if (error) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="alert">
-        Failed to load KPIs. {error instanceof Error ? error.message : "Unknown error."}
+        Failed to load KPIs. {getErrorMessage(error)}
       </div>
     );
   }
 
   if (!data) return null;
 
-  const { billed_amount, active_merchants, refunded_amount } = data;
+  const { billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount } = data;
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="KPI strip">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5" aria-label="KPI strip">
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">
         <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Gross Billed</p>
         <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(billed_amount.current)}</p>
@@ -95,6 +98,20 @@ export function KpiStrip() {
         <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatNumber(active_merchants.current)}</p>
         <p className="mt-1 text-sm">
           <DeltaBadge delta={active_merchants.delta} deltaPct={active_merchants.delta_pct} />
+        </p>
+      </div>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Collected</p>
+        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(collected_amount.current)}</p>
+        <p className="mt-1 text-sm">
+          <DeltaBadge delta={collected_amount.delta} deltaPct={collected_amount.delta_pct} />
+        </p>
+      </div>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Deposited</p>
+        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(deposited_amount.current)}</p>
+        <p className="mt-1 text-sm">
+          <DeltaBadge delta={deposited_amount.delta} deltaPct={deposited_amount.delta_pct} />
         </p>
       </div>
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
+import { getErrorMessage } from "@/lib/utils";
 
 interface PackageRow {
   app_id: string;
@@ -196,7 +197,7 @@ export default function AdminPackagesPage() {
       {isLoading && <p className="mt-6 text-slate-500">Loading…</p>}
       {error && (
         <p className="mt-6 text-red-600" role="alert">
-          Failed to load: {error instanceof Error ? error.message : "Unknown error"}
+          Failed to load: {getErrorMessage(error)}
         </p>
       )}
       {!isLoading && !error && (

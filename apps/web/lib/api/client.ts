@@ -40,7 +40,21 @@ export function createApiClient(options: ApiClientOptions) {
     });
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`API ${res.status}: ${text || res.statusText}`);
+      let userMessage: string;
+      try {
+        const body = text ? (JSON.parse(text) as { error?: string; message?: string }) : {};
+        userMessage = body.error ?? body.message ?? "";
+      } catch {
+        userMessage = "";
+      }
+      if (!userMessage) {
+        if (res.status === 401) userMessage = "Please sign in again.";
+        else if (res.status === 403) userMessage = "You don't have permission for this.";
+        else if (res.status === 404) userMessage = "The requested resource was not found.";
+        else if (res.status >= 500) userMessage = "Server error. Please try again later.";
+        else userMessage = text || res.statusText || "Something went wrong. Please try again.";
+      }
+      throw new Error(userMessage);
     }
     const contentType = res.headers.get("content-type");
     if (contentType?.includes("application/json")) {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function AdminMemoryPage() {
   const api = useApiClient();
@@ -51,7 +52,7 @@ export default function AdminMemoryPage() {
       {listLoading && <p className="mt-6 text-slate-500">Loading file list…</p>}
       {listError && (
         <p className="mt-6 text-red-600" role="alert">
-          Failed to load: {listError instanceof Error ? listError.message : "Unknown error"}
+          Failed to load: {getErrorMessage(listError)}
         </p>
       )}
 

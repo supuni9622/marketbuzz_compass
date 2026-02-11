@@ -3,7 +3,7 @@
 **Last updated:** 2026-02-11  
 **Current phase:** Phase 1 complete (Full UI + optional + proactive brief)  
 **Status:** MVP + Nova + Ask Nova (chat UI: avatars, empty state, example chips, teal gradient), Growth Plan, App tabs, Framer Motion, trend sparklines, Evidence zone, Admin Packages/Memory, proactive brief. UI polish: pill-style nav, user dropdown, custom filter dropdowns, sticky header/filters/tabs, Nova tagline, Show evidence buttons. Run `pnpm install` for framer-motion.  
-**Next task:** Phase 1 gap closure (Wave 1) or Deployment.
+**Next task:** Phase 1 gap closure (Wave 3) or Deployment.
 
 ### What's done
 - **MVP:** Monorepo, Supabase, ingestion (CSV → S3 → SQS → Lambda), canonical tables, Fastify API (metrics, merchants, brief, admin upload), Next.js (Cognito, filters, KPI strip, Scorecards, Action Center tables, Admin CSV upload + status), GET /brief (reads monthly_briefs or placeholder).
@@ -134,7 +134,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 Ordered tasks and details: [docs/PHASE1_GAP_CLOSURE_TASKS.md](PHASE1_GAP_CLOSURE_TASKS.md). Gap list: [docs/phase1_gaps.md](phase1_gaps.md).
 
 - [x] **Wave 1:** Parser ON HOLD → ONHOLD; Critical Churn API + UI; Retry Nova
-- [ ] **Wave 2:** Collected/Deposited in UI; API client + UI error handling; list_merchants NRA + HighRiskChurn; ONHOLD list API (+ UI)
+- [x] **Wave 2:** Collected/Deposited in UI; API client + UI error handling; list_merchants NRA + HighRiskChurn; ONHOLD list API (+ UI)
 - [ ] **Wave 3:** Brief actions (Show evidence, Generate growth plan); See who / deep links; table page-size/search/sort; NRA scorecard; optional filters; mobile
 - [ ] **Wave 4:** Growth plan lever table + charts; MONTHLY_BRIEF last 2 briefs; memory token truncation
 - [ ] **Wave 5:** memory_index + GET /memory/index; full Admin Memory API + UI (items, versions, approve, change-log)
@@ -207,6 +207,7 @@ Ordered tasks and details: [docs/PHASE1_GAP_CLOSURE_TASKS.md](PHASE1_GAP_CLOSURE
 | 2026-02-10 | Ask Nova chat UI/UX | UserAvatar component; NovaAvatar size + withBg; empty state with large Nova + welcome text + 4 example question chips; teal gradient chat area, rounded bubbles, Framer Motion entrance/stagger (useReducedMotion). Renamed Ask MarketBuzz → Ask Nova (nav, page title, component). |
 | 2026-02-10 | UI polish: nav, dropdowns, sticky, taglines | AppHeader: nav active states (pathname), user dropdown (email + Sign out; click-outside + Escape). Pill-style nav (rounded-lg, bg-teal-100 active, no underline) in AppHeader and Admin layout. System tagline teal-700; Nova full tagline in NarrativeBlock. Sticky wrapper (header + GlobalFilters + AppTabs) on home. Page background gradient (teal-50/50 → slate-50/80). Scorecards “Show evidence” as outline button + chevron. Custom FilterDropdown in GlobalFilters (Month, Compare, App); Compare options key = value+label to fix duplicate key. |
 | 2026-02-11 | Wave 1 gap closure | Parser: "ON HOLD" → ONHOLD (mapStatus trim spaces). GET /merchants/high-risk-churn + listHighRiskChurnMerchants. Action Center: Critical Churn section + HighRiskChurnTable + Export CSV. POST /admin/brief/retry?run_id=xxx; Admin uploads table: Nova column + Retry Nova button. |
+| 2026-02-11 | Wave 2 gap closure | KpiStrip + Scorecards: Collected and Deposited (5 KPIs; by-app + trend for collected/deposited). API client: friendly errors (parse JSON body, map 401/403/404/5xx). UI: getErrorMessage() + consistent fallback. Nova list_merchants: NRA (listNraMerchants) + HighRiskChurn. GET /merchants/onhold + Action Center "Payment at risk (ON HOLD)" table. |
 
 ---
 

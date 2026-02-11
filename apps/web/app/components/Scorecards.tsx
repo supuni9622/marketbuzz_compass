@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
+import { getErrorMessage } from "@/lib/utils";
 import { TrendSparkline } from "./TrendSparkline";
 import { ByAppBarChart } from "./ByAppBarChart";
 
@@ -19,6 +20,8 @@ interface KpisResponse {
   month: string;
   compare_month: string;
   billed_amount: MetricWithCompare;
+  collected_amount: MetricWithCompare;
+  deposited_amount: MetricWithCompare;
   active_merchants: MetricWithCompare;
   refunded_amount: MetricWithCompare;
 }
@@ -72,7 +75,7 @@ export function Scorecards() {
     },
   });
 
-  const [expandedCard, setExpandedCard] = useState<"billed" | "active" | "refunded" | null>(null);
+  const [expandedCard, setExpandedCard] = useState<"billed" | "active" | "collected" | "deposited" | "refunded" | null>(null);
 
   if (isLoading) {
     return (
@@ -83,8 +86,8 @@ export function Scorecards() {
         animate={{ opacity: 1 }}
       >
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {[1, 2, 3].map((i) => (
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-32 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" />
           ))}
         </div>
@@ -97,7 +100,7 @@ export function Scorecards() {
       <section className="mt-8" aria-label="Scorecards error">
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
         <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="alert">
-          Failed to load. {error instanceof Error ? error.message : "Unknown error."}
+          Failed to load. {getErrorMessage(error)}
         </div>
       </section>
     );
@@ -105,7 +108,7 @@ export function Scorecards() {
 
   if (!data) return null;
 
-  const { billed_amount, active_merchants, refunded_amount } = data;
+  const { billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount } = data;
   const cardVariants = getCardVariants(reduceMotion ?? false);
   const cards = [
     {
@@ -127,6 +130,26 @@ export function Scorecards() {
       trendMetric: "active_merchants" as const,
       byAppKey: "active_merchants" as const,
       formatByApp: formatNumber,
+    },
+    {
+      key: "collected" as const,
+      title: "Collected",
+      value: formatCurrency(collected_amount.current),
+      delta: collected_amount.delta,
+      deltaPct: collected_amount.delta_pct,
+      trendMetric: "collected_amount" as const,
+      byAppKey: "collected_amount" as const,
+      formatByApp: formatCurrency,
+    },
+    {
+      key: "deposited" as const,
+      title: "Deposited",
+      value: formatCurrency(deposited_amount.current),
+      delta: deposited_amount.delta,
+      deltaPct: deposited_amount.delta_pct,
+      trendMetric: "deposited_amount" as const,
+      byAppKey: "deposited_amount" as const,
+      formatByApp: formatCurrency,
     },
     {
       key: "refunded" as const,
@@ -161,7 +184,7 @@ export function Scorecards() {
     >
       <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Last 12 months trend (sparkline). Expand for by-app breakdown.</p>
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card, i) => (
           <motion.div
             key={card.key}

@@ -26,12 +26,12 @@ Low-risk; no change to existing UI flows except adding one table section.
 
 | Done | Task | phase1_gaps | Area | No-regression note |
 |------|------|-------------|------|--------------------|
-| [ ] | Surface Collected and Deposited in UI (KPI strip or scorecards; API already returns them) | §2 | UI | Add two values to existing KPI/brief context; read-only |
-| [ ] | API client: map 4xx/5xx to user-friendly messages; parse JSON error body; do not expose raw body | §9 | API client | Change throw message only; same status codes |
-| [ ] | UI: show user-friendly error messages everywhere; consistent fallback; mutation errors same style | §9 | UI | Replace raw error.message with mapped/fallback text |
-| [ ] | Nova list_merchants: add type NRA (from nra_merchants_monthly) | §13 | API (Nova tools + services) | New branch in toolListMerchants; existing types unchanged |
-| [ ] | Nova list_merchants: add type HighRiskChurn (from high_risk_churn_merchants) | §13 | API (Nova tools + services) | New branch; reuse or add merchant service for high-risk churn list |
-| [ ] | ONHOLD (payment at risk): API to list merchants with status ONHOLD for a month (+ optional UI) | §16 | API (+ optional UI) | New endpoint or reuse charges/revenue view; MRR doc §3 |
+| [x] | Surface Collected and Deposited in UI (KPI strip or scorecards; API already returns them) | §2 | UI | Add two values to existing KPI/brief context; read-only |
+| [x] | API client: map 4xx/5xx to user-friendly messages; parse JSON error body; do not expose raw body | §9 | API client | Change throw message only; same status codes |
+| [x] | UI: show user-friendly error messages everywhere; consistent fallback; mutation errors same style | §9 | UI | Replace raw error.message with mapped/fallback text |
+| [x] | Nova list_merchants: add type NRA (from nra_merchants_monthly) | §13 | API (Nova tools + services) | New branch in toolListMerchants; existing types unchanged |
+| [x] | Nova list_merchants: add type HighRiskChurn (from high_risk_churn_merchants) | §13 | API (Nova tools + services) | New branch; reuse or add merchant service for high-risk churn list |
+| [x] | ONHOLD (payment at risk): API to list merchants with status ONHOLD for a month (+ optional UI) | §16 | API (+ optional UI) | New endpoint or reuse charges/revenue view; MRR doc §3 |
 
 ---
 

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
+import { getErrorMessage } from "@/lib/utils";
 
 interface ByAppRow {
   app_id: string;
@@ -12,11 +13,13 @@ interface ByAppRow {
 interface MetricsByAppResponse {
   month: string;
   billed_amount: ByAppRow[];
+  collected_amount: ByAppRow[];
+  deposited_amount: ByAppRow[];
   active_merchants: ByAppRow[];
   refunded_amount: ByAppRow[];
 }
 
-type MetricKey = "billed_amount" | "active_merchants" | "refunded_amount";
+type MetricKey = "billed_amount" | "collected_amount" | "deposited_amount" | "active_merchants" | "refunded_amount";
 
 interface ByAppBarChartProps {
   month: string;
@@ -49,7 +52,7 @@ export function ByAppBarChart({
   if (error) {
     return (
       <p className="mt-2 text-sm text-red-600" role="alert">
-        {error instanceof Error ? error.message : "Failed to load"}
+        {getErrorMessage(error, "Failed to load breakdown.")}
       </p>
     );
   }
@@ -68,9 +71,9 @@ export function ByAppBarChart({
             </span>
             <div className="min-w-0 flex-1">
               <div
-                className="h-5 rounded bg-teal-500/20"
+                className="h-6 rounded bg-teal-600 dark:bg-teal-500"
                 style={{
-                  width: `${Math.max(2, (r.value / maxVal) * 100)}%`,
+                  width: `${Math.max(4, (r.value / maxVal) * 100)}%`,
                 }}
               />
             </div>
