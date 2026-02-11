@@ -44,7 +44,7 @@ Intelligence Layer (Agent)
 Web UI (tables + narratives)
 1️⃣ Ingestion Layer (CSV-safe, duplicate-proof)
 Input
-Monthly CSV upload (last 3 months only)
+Monthly CSV upload
 
 Logic
 UPSERT by Charge ID

@@ -5,7 +5,7 @@ MarketBuzz operates in the Clover App Market, serving thousands of small and med
 The core challenges are:
 
 1. Fragmented and misleading billing data
-Clover only allows exporting rolling 3-month CSV snapshots.
+Clover exports are CSV snapshots that can overlap across months.
 These exports:
 
 overlap across months
