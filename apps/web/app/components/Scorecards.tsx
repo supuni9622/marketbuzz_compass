@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useAuth } from "@/app/auth/AuthProvider";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
 import { getErrorMessage } from "@/lib/utils";
@@ -48,70 +49,66 @@ function DeltaBadge({ delta, deltaPct }: { delta: number; deltaPct: number | nul
   return <span className={colorClass}>{pctStr}</span>;
 }
 
-function getCardVariants(reduceMotion: boolean | null) {
-  if (reduceMotion) {
-    return { hidden: { opacity: 1, y: 0 }, visible: { opacity: 1, y: 0 } };
-  }
-  return {
-    hidden: { opacity: 0, y: 8 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.06, duration: 0.25 },
-    }),
-  };
+const SCORECARDS_SECTION_CLASS = "mt-8";
+const SCORECARDS_HEADING = "Scorecards";
+const SCORECARDS_DESCRIPTION = "Last 12 months trend (sparkline). Expand for by-app breakdown.";
+
+export function ScorecardsGridSkeleton() {
+  return (
+    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={i} className="h-32 animate-pulse rounded-xl border border-slate-200 bg-slate-200 dark:border-slate-600 dark:bg-slate-700" />
+      ))}
+    </div>
+  );
 }
 
-export function Scorecards() {
+export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
+  const { isLoading: authLoading } = useAuth();
   const api = useApiClient();
   const { monthApi, compareMonthApi, appId } = useFilters();
   const reduceMotion = useReducedMotion();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, error } = useQuery({
     queryKey: ["kpis", monthApi, compareMonthApi, appId],
     queryFn: () => {
       const params: Record<string, string> = { month: monthApi, compare_month: compareMonthApi };
       if (appId) params.app_id = appId;
       return api.get<KpisResponse>("/metrics/kpis", params);
     },
+    enabled: !authLoading,
   });
 
   const [expandedCard, setExpandedCard] = useState<"billed" | "active" | "collected" | "deposited" | "nra" | "refunded" | null>(null);
 
-  if (isLoading) {
-    return (
-      <motion.section
-        className="mt-8"
-        aria-label="Scorecards loading"
-        initial={false}
-        animate={{ opacity: 1 }}
-      >
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" />
-          ))}
-        </div>
-      </motion.section>
+  const hasData = data != null && !error;
+  const showSkeleton = !hasData;
+
+  const wrap = (content: ReactNode) =>
+    showHeading ? (
+      <section className={SCORECARDS_SECTION_CLASS} aria-label="Scorecards">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{SCORECARDS_HEADING}</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{SCORECARDS_DESCRIPTION}</p>
+        {content}
+      </section>
+    ) : (
+      content
     );
-  }
 
   if (error) {
-    return (
-      <section className="mt-8" aria-label="Scorecards error">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="alert">
-          Failed to load. {getErrorMessage(error)}
-        </div>
-      </section>
+    return wrap(
+      <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="alert">
+        Failed to load. {getErrorMessage(error)}
+      </div>
     );
   }
 
-  if (!data) return null;
+  if (showSkeleton) {
+    return wrap(<ScorecardsGridSkeleton />);
+  }
 
   const { billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount } = data;
   const nra_amount = data.nra_amount ?? { current: 0, compare: 0, delta: 0, delta_pct: null };
-  const cardVariants = getCardVariants(reduceMotion ?? false);
   const cards = [
     {
       key: "billed" as const,
@@ -182,27 +179,12 @@ export function Scorecards() {
         closed: { opacity: 0, height: 0 },
       };
 
-  return (
-    <motion.section
-      className="mt-8"
-      aria-label="Scorecards"
-      initial="hidden"
-      animate="visible"
-      variants={{
-        visible: {
-          transition: { staggerChildren: 0.06 },
-        },
-      }}
-    >
-      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Last 12 months trend (sparkline). Expand for by-app breakdown.</p>
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {cards.map((card, i) => (
-          <motion.div
+  const grid = (
+    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {cards.map((card) => (
+          <div
             key={card.key}
             className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800"
-            variants={cardVariants}
-            custom={i}
           >
             <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{card.title}</p>
             <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{card.value}</p>
@@ -244,9 +226,9 @@ export function Scorecards() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
         ))}
-      </div>
-    </motion.section>
+    </div>
   );
+  return wrap(grid);
 }

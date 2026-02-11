@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/app/auth/AuthProvider";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
 import { getErrorMessage } from "@/lib/utils";
-import { useState } from "react";
 
 const ACTION_CENTER_IDS = [
   "action-center",
@@ -181,6 +181,7 @@ interface OnHoldResponse {
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
 export function ActionCenterTables() {
+  const { isLoading: authLoading } = useAuth();
   const api = useApiClient();
   const { monthApi, appId } = useFilters();
   const [pageSize, setPageSize] = useState(25);
@@ -203,6 +204,7 @@ export function ActionCenterTables() {
       if (appId) params.app_id = appId;
       return api.get<LifecycleResponse>("/merchants/lifecycle", params);
     },
+    enabled: !authLoading,
   });
 
   const lostQuery = useQuery({
@@ -217,6 +219,7 @@ export function ActionCenterTables() {
       if (appId) params.app_id = appId;
       return api.get<LifecycleResponse>("/merchants/lifecycle", params);
     },
+    enabled: !authLoading,
   });
 
   const refundsQuery = useQuery({
@@ -230,6 +233,7 @@ export function ActionCenterTables() {
       if (appId) params.app_id = appId;
       return api.get<RefundsResponse>("/merchants/refunds", params);
     },
+    enabled: !authLoading,
   });
 
   const uninstallsQuery = useQuery({
@@ -243,6 +247,7 @@ export function ActionCenterTables() {
       if (appId) params.app_id = appId;
       return api.get<UninstallsResponse>("/merchants/uninstalls", params);
     },
+    enabled: !authLoading,
   });
 
   const criticalChurnQuery = useQuery({
@@ -256,6 +261,7 @@ export function ActionCenterTables() {
       if (appId) params.app_id = appId;
       return api.get<HighRiskChurnResponse>("/merchants/high-risk-churn", params);
     },
+    enabled: !authLoading,
   });
 
   const onHoldQuery = useQuery({
@@ -269,6 +275,7 @@ export function ActionCenterTables() {
       if (appId) params.app_id = appId;
       return api.get<OnHoldResponse>("/merchants/onhold", params);
     },
+    enabled: !authLoading,
   });
 
   useEffect(() => {
@@ -288,6 +295,15 @@ export function ActionCenterTables() {
     setRefundsPage(1);
     setUninstallsPage(1);
   };
+
+  if (authLoading) {
+    return (
+      <section className="mt-8" aria-label="Action Center loading">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Action Center</h2>
+        <div className="mt-4 h-64 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" />
+      </section>
+    );
+  }
 
   return (
     <section id="action-center" className="mt-8 scroll-mt-6" aria-label="Action Center">

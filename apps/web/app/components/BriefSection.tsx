@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/app/auth/AuthProvider";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { getErrorMessage } from "@/lib/utils";
 import { useFilters } from "@/app/hooks/useFilters";
@@ -15,6 +16,7 @@ interface BriefResponse {
 }
 
 export function BriefSection() {
+  const { isLoading: authLoading } = useAuth();
   const api = useApiClient();
   const { monthApi } = useFilters();
   const [hasNewContent, setHasNewContent] = useState(false);
@@ -23,6 +25,7 @@ export function BriefSection() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["brief", monthApi],
     queryFn: () => api.get<BriefResponse>("/brief", { month: monthApi }),
+    enabled: !authLoading,
   });
 
   const placeholder = data?.placeholder ?? true;
@@ -38,6 +41,15 @@ export function BriefSection() {
       return () => clearTimeout(t);
     }
   }, [isLoading, placeholder]);
+
+  if (authLoading || isLoading) {
+    return (
+      <section className="mt-6" aria-label="Monthly Brief loading">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">MarketBuzz Monthly Brief</h2>
+        <div className="mt-4 h-32 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" />
+      </section>
+    );
+  }
 
   if (error) {
     return (

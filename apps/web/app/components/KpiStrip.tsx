@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/app/auth/AuthProvider";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
 import { getErrorMessage } from "@/lib/utils";
@@ -52,19 +53,22 @@ function DeltaBadge({ delta, deltaPct }: { delta: number; deltaPct: number | nul
 }
 
 export function KpiStrip() {
+  const { isLoading: authLoading } = useAuth();
   const api = useApiClient();
   const { monthApi, compareMonthApi, appId } = useFilters();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, isPending, error } = useQuery({
     queryKey: ["kpis", monthApi, compareMonthApi, appId],
     queryFn: () => {
       const params: Record<string, string> = { month: monthApi, compare_month: compareMonthApi };
       if (appId) params.app_id = appId;
       return api.get<KpisResponse>("/metrics/kpis", params);
     },
+    enabled: !authLoading,
   });
 
-  if (isLoading) {
+  const waitingForData = authLoading || isLoading || isPending || !data;
+  if (waitingForData && !error) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="KPI strip loading">
         {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -82,7 +86,15 @@ export function KpiStrip() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="KPI strip loading">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-24 animate-pulse rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-600 dark:bg-slate-700" />
+        ))}
+      </div>
+    );
+  }
 
   const { billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount } = data;
   const nra_amount = data.nra_amount ?? { current: 0, compare: 0, delta: 0, delta_pct: null };
