@@ -5,6 +5,8 @@
 import { readFile } from "fs/promises";
 import path from "path";
 import { config } from "../config.js";
+import { db } from "../db.js";
+import { getLastBriefs } from "../services/brief.js";
 
 export type NovaTaskType =
   | "MONTHLY_BRIEF"
@@ -70,9 +72,24 @@ function getMemoryRoot(): string {
   return path.resolve(process.cwd(), "memory");
 }
 
+/** Token budget for assembled memory bundle (NOVA_MEMORY_LOADING_ALGORITHM §5). */
+const MEMORY_TOKEN_BUDGET = 4000;
+
+/** Rough token estimate: ~4 chars per token for English. */
+function estimateTokens(s: string): number {
+  return Math.ceil(s.length / 4);
+}
+
+/** Truncate string to fit within maxTokens (approx). */
+function truncateToTokens(s: string, maxTokens: number): string {
+  const maxChars = Math.max(0, maxTokens * 4);
+  if (s.length <= maxChars) return s;
+  return s.slice(0, maxChars).trimEnd() + "\n\n[…truncated]";
+}
+
 /**
  * Load memory content for a task type. Reads files from memory root; missing files yield empty string.
- * Truncation to token budget can be added later.
+ * Assembles bundle then truncates to token budget (content order preserved).
  */
 export async function loadMemoryBundle(taskType: NovaTaskType): Promise<string> {
   const root = getMemoryRoot();
@@ -89,8 +106,38 @@ export async function loadMemoryBundle(taskType: NovaTaskType): Promise<string> 
     }
   }
 
+  if (taskType === "MONTHLY_BRIEF" && db.isConfigured()) {
+    try {
+      const supabase = db.get();
+      const briefs = await getLastBriefs(supabase, 2);
+      for (const b of briefs) {
+        const monthLabel = String(b.month).slice(0, 7);
+        parts.push(`## Prior brief ${monthLabel}\n\n${b.brief_markdown ?? ""}`);
+      }
+    } catch {
+      // DB or brief fetch failed; continue without prior briefs
+    }
+  }
+
   if (parts.length === 0) return "";
-  return "# Nova memory (task: " + taskType + ")\n\n" + parts.join("\n\n---\n\n");
+
+  const header = "# Nova memory (task: " + taskType + ")\n\n";
+  const budget = MEMORY_TOKEN_BUDGET - estimateTokens(header);
+  const selected: string[] = [];
+  let total = 0;
+  for (const p of parts) {
+    const est = estimateTokens(p);
+    if (total + est <= budget) {
+      selected.push(p);
+      total += est;
+    } else {
+      const remaining = budget - total;
+      if (remaining > 50) selected.push(truncateToTokens(p, remaining));
+      break;
+    }
+  }
+
+  return header + selected.join("\n\n---\n\n");
 }
 
 /** All unique memory file paths (for Admin Memory Manager list). */
@@ -100,6 +147,30 @@ export function getMemoryFileList(): string[] {
     for (const f of files) set.add(f);
   }
   return Array.from(set).sort();
+}
+
+/** Index item for discovery (GET /memory/index). */
+export interface MemoryIndexItem {
+  path: string;
+  category: string;
+}
+
+/** Registry shape for memory discovery (equivalent to memory_index.json). */
+export interface MemoryIndex {
+  version: string;
+  items: MemoryIndexItem[];
+}
+
+/**
+ * Build memory index from bundle paths. Category = first path segment (e.g. definitions, playbooks).
+ */
+export function getMemoryIndex(): MemoryIndex {
+  const files = getMemoryFileList();
+  const items: MemoryIndexItem[] = files.map((path) => {
+    const segment = path.split("/")[0];
+    return { path, category: segment ?? "other" };
+  });
+  return { version: "1.0", items };
 }
 
 /** Read a single memory file by relative path. Returns content or null if missing. */

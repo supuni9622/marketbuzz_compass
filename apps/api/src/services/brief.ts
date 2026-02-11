@@ -44,6 +44,24 @@ export async function getBrief(
 }
 
 /**
+ * Get last N briefs by month (desc), returned oldest-first for context order.
+ * Used by MONTHLY_BRIEF memory bundle (last 2 briefs).
+ */
+export async function getLastBriefs(
+  supabase: SupabaseClient,
+  limit: number = 2
+): Promise<MonthlyBriefRow[]> {
+  const { data, error } = await supabase
+    .from("monthly_briefs")
+    .select("month, created_at, created_by, headline_gross_billed, mom_delta, mom_delta_pct, brief_markdown, evidence_links, flags")
+    .order("month", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  const rows = (data ?? []) as MonthlyBriefRow[];
+  return rows.reverse();
+}
+
+/**
  * Response shape: either cached brief or placeholder.
  */
 export interface BriefResponse {

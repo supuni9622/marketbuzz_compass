@@ -42,12 +42,13 @@ let cached: WorkflowBudgets | null = null;
 async function loadBudgets(): Promise<WorkflowBudgets> {
   if (cached) return cached;
   const root = process.cwd();
-  const repoDocs = path.resolve(__dirname, "../../../docs/workflow_budgets.json");
+  // From apps/api/src/nova or apps/api/dist/nova, ../../../../ is monorepo root
+  const repoRootDocs = path.resolve(__dirname, "../../../../docs/workflow_budgets.json");
   const docPath = path.join(root, "docs", "workflow_budgets.json");
   const altPath = path.join(root, "..", "docs", "workflow_budgets.json");
   let raw: string;
   try {
-    raw = await readFile(repoDocs, "utf-8");
+    raw = await readFile(repoRootDocs, "utf-8");
   } catch {
     try {
       raw = await readFile(docPath, "utf-8");

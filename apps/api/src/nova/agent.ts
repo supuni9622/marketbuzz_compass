@@ -139,9 +139,162 @@ export interface GrowthPlanInput {
   constraints?: Record<string, unknown>;
 }
 
+/** One row of the Lever Breakdown Table (GROWTH_PLANNING_SPEC Step 5). */
+export interface LeverBreakdownRow {
+  lever: string;
+  expected_contribution: string;
+  confidence: string;
+}
+
+/**
+ * Parse Nova markdown for a Lever Breakdown Table: Lever | Expected Contribution | Confidence.
+ * Returns up to 4 rows (Retention, Expansion, Win-back, Acquisition) when a matching table is found.
+ */
+export function parseLeverBreakdownFromMarkdown(markdown: string): LeverBreakdownRow[] | undefined {
+  const lines = markdown.split(/\r?\n/).map((l) => l.trim());
+  const expectedLevers = ["Retention", "Expansion", "Win-back", "Acquisition"];
+  for (let i = 0; i < lines.length; i++) {
+    const header = lines[i];
+    if (header === undefined || !header.startsWith("|") || !header.includes("|")) continue;
+    const headerCells = header.split("|").map((c) => c.trim().toLowerCase());
+    const leverIdx = headerCells.findIndex((c) => c === "lever");
+    const contribIdx = headerCells.findIndex(
+      (c) => c.includes("expected") && c.includes("contribution")
+    );
+    const confIdx = headerCells.findIndex((c) => c === "confidence");
+    if (leverIdx === -1 || contribIdx === -1 || confIdx === -1) continue;
+    const nextLine = lines[i + 1];
+    const isSeparator =
+      nextLine?.startsWith("|") && /^[\s|:\-]+$/.test(nextLine);
+    const dataStart = isSeparator ? i + 2 : i + 1;
+    const rows: LeverBreakdownRow[] = [];
+    for (let j = dataStart; j < lines.length; j++) {
+      const line = lines[j];
+      if (line === undefined || !line.startsWith("|")) break;
+      const cells = line.split("|").map((c) => c.trim());
+      if (cells.length < Math.max(leverIdx, contribIdx, confIdx) + 1) break;
+      const lever = cells[leverIdx] ?? "";
+      const contribution = cells[contribIdx] ?? "";
+      const confidence = cells[confIdx] ?? "";
+      const leverNorm = lever.toLowerCase();
+      const isExpected =
+        expectedLevers.some((l) => leverNorm.includes(l.toLowerCase())) ||
+        leverNorm === "nra" ||
+        leverNorm === "acquisition";
+      if (isExpected && (contribution || confidence)) {
+        rows.push({ lever, expected_contribution: contribution, confidence });
+      }
+      if (rows.length >= 4) break;
+    }
+    if (rows.length > 0) return rows;
+  }
+  return undefined;
+}
+
+/** Execution list item (merchant or candidate label from Nova). */
+export interface ExecutionListItem {
+  label: string;
+}
+
+/** NRA by plan row (plan name + required count or amount). */
+export interface NraByPlanRow {
+  plan: string;
+  required: string;
+}
+
+/** Execution Lists (GROWTH_PLANNING_SPEC Step 5). */
+export interface ExecutionLists {
+  at_risk?: ExecutionListItem[];
+  upgrade_candidates?: ExecutionListItem[];
+  lost?: ExecutionListItem[];
+  nra_by_plan?: NraByPlanRow[];
+}
+
+const EXECUTION_SECTION_HEADINGS: Record<keyof Omit<ExecutionLists, "nra_by_plan">, string[]> = {
+  at_risk: ["at risk merchants to contact", "retention candidates", "at risk to contact"],
+  upgrade_candidates: ["upgrade candidates", "expansion candidates"],
+  lost: ["lost merchants to target", "win-back candidates", "lost to target"],
+};
+
+/**
+ * Parse Nova markdown for Execution Lists: bullet lists under section headings,
+ * and NRA by plan table (Plan | Required or Count).
+ */
+export function parseExecutionListsFromMarkdown(markdown: string): ExecutionLists | undefined {
+  const lines = markdown.split(/\r?\n/).map((l) => l.trim());
+  const out: ExecutionLists = {};
+
+  function findSectionStart(searchPhrases: string[]): number {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line === undefined) continue;
+      const lower = line.toLowerCase();
+      if (!lower.startsWith("##")) continue;
+      const title = lower.replace(/^#+\s*/, "").trim();
+      if (searchPhrases.some((p) => title.includes(p))) return i;
+    }
+    return -1;
+  }
+
+  function collectBulletList(startIdx: number): ExecutionListItem[] {
+    const items: ExecutionListItem[] = [];
+    for (let j = startIdx + 1; j < lines.length; j++) {
+      const line = lines[j];
+      if (line === undefined) break;
+      if (line.startsWith("##")) break;
+      const bulletMatch = line.match(/^[\s]*[\-\*•]\s+(.+)$/);
+      if (bulletMatch) {
+        const label = bulletMatch[1]?.trim() ?? "";
+        if (label.length > 0) items.push({ label });
+      }
+    }
+    return items;
+  }
+
+  for (const [key, phrases] of Object.entries(EXECUTION_SECTION_HEADINGS) as Array<[
+    keyof Omit<ExecutionLists, "nra_by_plan">,
+    string[],
+  ]>) {
+    const idx = findSectionStart(phrases);
+    if (idx >= 0) {
+      const list = collectBulletList(idx);
+      if (list.length > 0) out[key] = list;
+    }
+  }
+
+  const nraIdx = findSectionStart(["required nra by plan", "nra by plan", "acquisition by plan"]);
+  if (nraIdx >= 0) {
+    for (let i = nraIdx + 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (line === undefined || line.startsWith("##")) break;
+      if (!line.startsWith("|") || line.includes("---")) continue;
+      const cells = line.split("|").map((c) => c.trim()).filter(Boolean);
+      if (cells.length >= 2) {
+        const plan = cells[0] ?? "";
+        const required = cells[1] ?? "";
+        if (plan.toLowerCase() !== "plan" && plan.toLowerCase() !== "required" && plan) {
+          if (!out.nra_by_plan) out.nra_by_plan = [];
+          out.nra_by_plan.push({ plan, required });
+        }
+      }
+    }
+  }
+
+  const hasAny =
+    (out.at_risk?.length ?? 0) > 0 ||
+    (out.upgrade_candidates?.length ?? 0) > 0 ||
+    (out.lost?.length ?? 0) > 0 ||
+    (out.nra_by_plan?.length ?? 0) > 0;
+  return hasAny ? out : undefined;
+}
+
 export interface GrowthPlanResult {
   markdown: string;
   tool_calls_used: number;
+  /** Parsed Lever Breakdown Table when present in Nova markdown. */
+  lever_breakdown?: LeverBreakdownRow[];
+  /** Parsed Execution Lists when present in Nova markdown. */
+  execution_lists?: ExecutionLists;
 }
 
 export async function runNovaGrowthPlan(input: GrowthPlanInput): Promise<GrowthPlanResult> {
@@ -165,7 +318,13 @@ Use get_growth_baseline for the baseline, then produce a structured plan with:
 1. Last month gross billed baseline
 2. Target revenue (baseline × (1 + growth%))
 3. Gap to close
-4. Levers: Retention, Expansion, Win-back, Acquisition (NRA) with expected contribution and assumptions.
+4. A Lever Breakdown Table in markdown with exactly these columns: Lever | Expected Contribution | Confidence. Include one row each for Retention, Expansion, Win-back, Acquisition (use "Acquisition" for NRA). Use dollar amounts and High/Medium/Low for confidence.
+5. Execution Lists — use exactly these section headings and format:
+   - ## At Risk merchants to contact — then a bullet list (- or *) of merchant names or identifiers to contact.
+   - ## Upgrade candidates — then a bullet list of upgrade candidate names.
+   - ## Lost merchants to target — then a bullet list of lost merchants to target for win-back.
+   - ## Required NRA by plan — then a markdown table with columns: Plan | Required (e.g. "Basic" | "5" or "Pro" | "$2,000").
+6. Assumptions and guardrails.
 Keep it realistic; state confidence and assumptions.`;
 
   const apiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -213,7 +372,10 @@ Keep it realistic; state confidence and assumptions.`;
     }
 
     const content = msg.content ?? "";
-    return { markdown: content.trim(), tool_calls_used: toolCallsUsed };
+    const markdown = content.trim();
+    const lever_breakdown = parseLeverBreakdownFromMarkdown(markdown);
+    const execution_lists = parseExecutionListsFromMarkdown(markdown);
+    return { markdown, tool_calls_used: toolCallsUsed, lever_breakdown, execution_lists };
   }
 
   return {

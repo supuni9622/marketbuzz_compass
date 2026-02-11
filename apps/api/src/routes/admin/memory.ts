@@ -4,12 +4,54 @@
  */
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { authMiddleware, requireAdmin } from "../../auth/middleware.js";
-import { getMemoryFileList, readMemoryFile } from "../../nova/memoryLoader.js";
+import { getMemoryFileList, getMemoryIndex, readMemoryFile } from "../../nova/memoryLoader.js";
 
 export async function adminMemoryRoutes(
   app: FastifyInstance,
   _opts: FastifyPluginOptions
 ): Promise<void> {
+  app.get(
+    "/memory/index",
+    {
+      preHandler: [authMiddleware, requireAdmin],
+      schema: {
+        description:
+          "Memory discovery index (registry). Returns paths with category. Equivalent to memory_index.json. Admin only.",
+        tags: ["Admin", "Memory"],
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              version: { type: "string" },
+              items: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    path: { type: "string" },
+                    category: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+          500: { type: "object", properties: { error: { type: "string" } } },
+        },
+      },
+    },
+    async (_request, reply) => {
+      try {
+        const index = getMemoryIndex();
+        return index;
+      } catch (err) {
+        app.log.error(err);
+        return reply.status(500).send({
+          error: err instanceof Error ? err.message : "Failed to get memory index",
+        });
+      }
+    }
+  );
+
   app.get(
     "/memory/list",
     {

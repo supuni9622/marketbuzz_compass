@@ -131,6 +131,46 @@ export async function novaRoutes(
             properties: {
               markdown: { type: "string" },
               tool_calls_used: { type: "integer" },
+              lever_breakdown: {
+                type: "array",
+                description: "Parsed Lever Breakdown Table (Lever | Expected Contribution | Confidence)",
+                items: {
+                  type: "object",
+                  properties: {
+                    lever: { type: "string" },
+                    expected_contribution: { type: "string" },
+                    confidence: { type: "string" },
+                  },
+                },
+              },
+              execution_lists: {
+                type: "object",
+                description: "Parsed Execution Lists (At Risk, Upgrade candidates, Lost, NRA by plan)",
+                properties: {
+                  at_risk: {
+                    type: "array",
+                    items: { type: "object", properties: { label: { type: "string" } } },
+                  },
+                  upgrade_candidates: {
+                    type: "array",
+                    items: { type: "object", properties: { label: { type: "string" } } },
+                  },
+                  lost: {
+                    type: "array",
+                    items: { type: "object", properties: { label: { type: "string" } } },
+                  },
+                  nra_by_plan: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        plan: { type: "string" },
+                        required: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
           400: { type: "object", properties: { error: { type: "string" } } },

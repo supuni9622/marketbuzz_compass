@@ -136,7 +136,7 @@ Ordered tasks and details: [docs/PHASE1_GAP_CLOSURE_TASKS.md](PHASE1_GAP_CLOSURE
 - [x] **Wave 1:** Parser ON HOLD → ONHOLD; Critical Churn API + UI; Retry Nova
 - [x] **Wave 2:** Collected/Deposited in UI; API client + UI error handling; list_merchants NRA + HighRiskChurn; ONHOLD list API (+ UI)
 - [x] **Wave 3:** Brief: Show evidence + Generate growth plan buttons; Action Center ids + hash scroll; page-size 25/50/100; NRA scorecard (API nra_amount/nra_count + KpiStrip + Scorecards); Reset filters; viewport + mobile hamburger nav
-- [ ] **Wave 4:** Growth plan lever table + charts; MONTHLY_BRIEF last 2 briefs; memory token truncation
+- [x] **Wave 4:** Lever Breakdown Table + Execution Lists; line + waterfall charts; MONTHLY_BRIEF last 2 briefs; memory token truncation
 - [ ] **Wave 5:** memory_index + GET /memory/index; full Admin Memory API + UI (items, versions, approve, change-log)
 - [ ] **Wave 6 (optional):** Recovered, expectations vs outcomes, LLM escalation/circuit breaker, L1/L2 cache, PDF/Excel, S3 memory
 
@@ -209,6 +209,12 @@ Ordered tasks and details: [docs/PHASE1_GAP_CLOSURE_TASKS.md](PHASE1_GAP_CLOSURE
 | 2026-02-11 | Wave 1 gap closure | Parser: "ON HOLD" → ONHOLD (mapStatus trim spaces). GET /merchants/high-risk-churn + listHighRiskChurnMerchants. Action Center: Critical Churn section + HighRiskChurnTable + Export CSV. POST /admin/brief/retry?run_id=xxx; Admin uploads table: Nova column + Retry Nova button. |
 | 2026-02-11 | Wave 2 gap closure | KpiStrip + Scorecards: Collected and Deposited (5 KPIs; by-app + trend for collected/deposited). API client: friendly errors (parse JSON body, map 401/403/404/5xx). UI: getErrorMessage() + consistent fallback. Nova list_merchants: NRA (listNraMerchants) + HighRiskChurn. GET /merchants/onhold + Action Center "Payment at risk (ON HOLD)" table. |
 | 2026-02-11 | Wave 3 gap closure | Brief: "Show evidence" (anchor #action-center) + "Generate growth plan" (link /growth-plan). Action Center: section/subsection ids + hash scroll; page-size selector 25/50/100. NRA: aggregateNra, getKpis nra_amount/nra_count, getTrend nra_amount, getMetricsByApp nra_amount; NRA card in KpiStrip + Scorecards. GlobalFilters: Reset filters. Layout: viewport meta. AppHeader: tagline hidden on small; hamburger nav on md below. |
+| 2026-02-11 | Wave 4 (partial): Lever Breakdown Table | API: parseLeverBreakdownFromMarkdown in agent.ts; GrowthPlanResult.lever_breakdown; POST /growth-plan returns lever_breakdown. UI: growth-plan page shows Lever Breakdown table (Lever, Expected Contribution, Confidence) when present. Execution Lists not yet implemented. |
+| 2026-02-11 | Wave 4: Growth plan Execution Lists | API: ExecutionLists type; parseExecutionListsFromMarkdown (At Risk, Upgrade candidates, Lost bullet lists; NRA by plan table); GrowthPlanResult.execution_lists; prompt requires four sections. UI: growth-plan step 3 shows four execution list tables (At Risk merchants to contact, Upgrade candidates, Lost merchants to target, Required NRA by plan) when present. |
+| 2026-02-11 | Wave 4: Growth plan line + waterfall charts | UI: growth-plan step 3 — Line chart (last 6 months billed from GET /metrics/trend + target marker); Waterfall (baseline → levers from lever_breakdown → target). SVG/div charts, no new deps. |
+| 2026-02-11 | Wave 4: MONTHLY_BRIEF last 2 briefs | brief.ts: getLastBriefs(supabase, limit); memoryLoader: when taskType MONTHLY_BRIEF and db configured, fetch last 2 briefs from monthly_briefs and append "## Prior brief YYYY-MM" to bundle. |
+| 2026-02-11 | Wave 4: Memory loader token budget and truncation | memoryLoader: MEMORY_TOKEN_BUDGET 4000; estimateTokens (~4 chars/token); truncate assembled bundle by taking parts in order until budget, optionally truncate last part; content order preserved. |
+| 2026-02-11 | Wave 5 Task 1: memory index + GET /memory/index | memoryLoader: getMemoryIndex() returns { version, items: [{ path, category }] } from bundle paths. GET /admin/memory/index (Admin only); GET list/content unchanged. |
 
 ---
 

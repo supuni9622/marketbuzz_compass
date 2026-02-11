@@ -53,10 +53,11 @@ Low-risk; no change to existing UI flows except adding one table section.
 
 | Done | Task | phase1_gaps | Area | No-regression note |
 |------|------|-------------|------|--------------------|
-| [ ] | Growth plan: structured Lever Breakdown Table + Execution Lists (from Nova or API) | §15 | API + UI | Structure in response or parse markdown; display table |
-| [ ] | Growth plan: line chart (last 6 months + target) and waterfall (baseline → levers → target) | §15 | UI | New charts; existing markdown result still shown |
-| [ ] | MONTHLY_BRIEF memory bundle: load last 2 briefs (from files or monthly_briefs) | §14 | API (memoryLoader) | Add dynamic brief paths or DB fetch; existing bundles unchanged |
-| [ ] | Memory loader: token budget and truncation for assembled bundle | §14 | API (memoryLoader) | Truncate by token count; existing content order preserved |
+| [x] | Growth plan: structured Lever Breakdown Table (from Nova or API) | §15 | API + UI | Parse markdown in response; display table in UI |
+| [x] | Growth plan: Execution Lists (At Risk, upgrade candidates, win-back, NRA by plan) | §15 | API + UI | Parse markdown; display four tables in UI |
+| [x] | Growth plan: line chart (last 6 months + target) and waterfall (baseline → levers → target) | §15 | UI | New charts; existing markdown result still shown |
+| [x] | MONTHLY_BRIEF memory bundle: load last 2 briefs (from files or monthly_briefs) | §14 | API (memoryLoader) | DB fetch getLastBriefs; prior briefs appended to bundle |
+| [x] | Memory loader: token budget and truncation for assembled bundle | §14 | API (memoryLoader) | Truncate by token count; existing content order preserved |
 
 ---
 
@@ -64,7 +65,7 @@ Low-risk; no change to existing UI flows except adding one table section.
 
 | Done | Task | phase1_gaps | Area | No-regression note |
 |------|------|-------------|------|--------------------|
-| [ ] | memory_index.json (or equivalent) + GET /memory/index for discovery | §17 | API | New endpoint; existing list/content by path still work |
+| [x] | memory_index.json (or equivalent) + GET /memory/index for discovery | §17 | API | GET /admin/memory/index returns { version, items: [{ path, category }] }; list/content unchanged |
 | [ ] | Admin Memory: full API (items, item/{id}, versions?status=draft, create, upload, approve, reject, change-log) | §4, §18 | API | New routes; existing GET list/content remain |
 | [ ] | Admin Memory UI: tabs Active / Drafts / Change History / Create-Upload; review screen with diff | §4, §18 | UI | Extend current Memory page; keep list + view |
 
