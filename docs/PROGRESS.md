@@ -1,9 +1,9 @@
 # MarketBuzz Compass — Progress Tracker
 
-**Last updated:** 2026-02-10  
+**Last updated:** 2026-02-11  
 **Current phase:** Phase 1 complete (Full UI + optional + proactive brief)  
 **Status:** MVP + Nova + Ask Nova (chat UI: avatars, empty state, example chips, teal gradient), Growth Plan, App tabs, Framer Motion, trend sparklines, Evidence zone, Admin Packages/Memory, proactive brief. UI polish: pill-style nav, user dropdown, custom filter dropdowns, sticky header/filters/tabs, Nova tagline, Show evidence buttons. Run `pnpm install` for framer-motion.  
-**Next task:** Deployment.
+**Next task:** Phase 1 gap closure (Wave 1) or Deployment.
 
 ### What's done
 - **MVP:** Monorepo, Supabase, ingestion (CSV → S3 → SQS → Lambda), canonical tables, Fastify API (metrics, merchants, brief, admin upload), Next.js (Cognito, filters, KPI strip, Scorecards, Action Center tables, Admin CSV upload + status), GET /brief (reads monthly_briefs or placeholder).
@@ -16,6 +16,7 @@
 
 ### What's remaining
 
+- **Phase 1 gap closure:** Ordered tasks in [docs/PHASE1_GAP_CLOSURE_TASKS.md](PHASE1_GAP_CLOSURE_TASKS.md); source of truth for gaps: [docs/phase1_gaps.md](phase1_gaps.md). Work by wave (1 → 5) without harming current functionality.
 - **Deployment:** API → Lambda + API Gateway; ingestion Worker → Lambda (SQS); optional scheduled-brief Lambda + EventBridge; Web → Vercel/Amplify; prod DB (RDS or Supabase).
 - **Optional setup:** Create scheduled-brief Lambda and EventBridge rule per `docs/articles/scheduled-brief-lambda-eventbridge.md` (API_URL, INTERNAL_BRIEF_API_KEY in Lambda env).
 ---
@@ -128,6 +129,17 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 - [ ] Web → Vercel/Amplify
 - [ ] RDS (prod) or Supabase (if staying)
 
+### 11. Phase 1 gap closure
+
+Ordered tasks and details: [docs/PHASE1_GAP_CLOSURE_TASKS.md](PHASE1_GAP_CLOSURE_TASKS.md). Gap list: [docs/phase1_gaps.md](phase1_gaps.md).
+
+- [ ] **Wave 1:** Parser ON HOLD → ONHOLD; Critical Churn API + UI; Retry Nova
+- [ ] **Wave 2:** Collected/Deposited in UI; API client + UI error handling; list_merchants NRA + HighRiskChurn; ONHOLD list API (+ UI)
+- [ ] **Wave 3:** Brief actions (Show evidence, Generate growth plan); See who / deep links; table page-size/search/sort; NRA scorecard; optional filters; mobile
+- [ ] **Wave 4:** Growth plan lever table + charts; MONTHLY_BRIEF last 2 briefs; memory token truncation
+- [ ] **Wave 5:** memory_index + GET /memory/index; full Admin Memory API + UI (items, versions, approve, change-log)
+- [ ] **Wave 6 (optional):** Recovered, expectations vs outcomes, LLM escalation/circuit breaker, L1/L2 cache, PDF/Excel, S3 memory
+
 ---
 
 ## Completed Tasks
@@ -229,7 +241,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 ## Handoff for New Context
 When starting a new chat, paste this:
 
-*"Continue MarketBuzz Compass. Backend: GET /metrics/kpis, GET /metrics/trend, GET /metrics/by-app, GET /merchants/lifecycle, GET /merchants/refunds, GET /merchants/uninstalls (paginated), GET /brief, POST /nova/chat, POST /nova/growth-plan, POST /admin/brief/generate (Admin or X-Internal-Brief-Key), POST /admin/upload/csv, GET /admin/uploads, GET/POST/PATCH/DELETE /admin/packages, GET /admin/memory/list, GET /admin/memory/content. Frontend: Cognito Hosted UI (PKCE), global filters (custom dropdowns for Month/Compare/App) + Copy link, sticky header+filters+App tabs on home, pill-style nav (AppHeader + Admin layout), user dropdown (email + Sign out), App tabs, KPI strip, narrative + Nova tagline, Scorecards (12-month sparklines + Evidence zone “Show evidence” button with chevron, by-app chart), Action Center (At Risk, Lost, Refunds, Uninstalls) with Export CSV, /ask (Ask Nova chat: avatars, empty state + example chips, teal gradient), /growth-plan (wizard), Admin upload + status, Admin Packages, Admin Memory, Framer Motion (entrance, Evidence expand/collapse, useReducedMotion). Phase 1 complete. UI polish: teal gradient page background, taglines highlighted. Docs: proactive-brief-trigger-architecture.md, scheduled-brief-lambda-eventbridge.md. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md @docs/AGENT_SPEC.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web. Run pnpm install for framer-motion."*
+*"Continue MarketBuzz Compass. Backend: GET /metrics/kpis, GET /metrics/trend, GET /metrics/by-app, GET /merchants/lifecycle, GET /merchants/refunds, GET /merchants/uninstalls (paginated), GET /brief, POST /nova/chat, POST /nova/growth-plan, POST /admin/brief/generate (Admin or X-Internal-Brief-Key), POST /admin/upload/csv, GET /admin/uploads, GET/POST/PATCH/DELETE /admin/packages, GET /admin/memory/list, GET /admin/memory/content. Frontend: Cognito Hosted UI (PKCE), global filters (custom dropdowns for Month/Compare/App) + Copy link, sticky header+filters+App tabs on home, pill-style nav (AppHeader + Admin layout), user dropdown (email + Sign out), App tabs, KPI strip, narrative + Nova tagline, Scorecards (12-month sparklines + Evidence zone “Show evidence” button with chevron, by-app chart), Action Center (At Risk, Lost, Refunds, Uninstalls) with Export CSV, /ask (Ask Nova chat: avatars, empty state + example chips, teal gradient), /growth-plan (wizard), Admin upload + status, Admin Packages, Admin Memory, Framer Motion (entrance, Evidence expand/collapse, useReducedMotion). Phase 1 complete. Gap closure: ordered tasks in @docs/PHASE1_GAP_CLOSURE_TASKS.md; gaps list @docs/phase1_gaps.md. UI polish: teal gradient page background, taglines highlighted. Docs: proactive-brief-trigger-architecture.md, scheduled-brief-lambda-eventbridge.md. Use @docs/PROGRESS.md @AGENTS.md @docs/INGESTION_WORKFLOW.md @docs/BRAND_AND_UI.md @docs/AGENT_SPEC.md. Backend Fastify, DB Supabase, monorepo apps/api and apps/web. Run pnpm install for framer-motion."*
 
 ---
 
