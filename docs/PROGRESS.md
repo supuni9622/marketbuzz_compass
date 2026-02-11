@@ -215,6 +215,8 @@ Ordered tasks and details: [docs/PHASE1_GAP_CLOSURE_TASKS.md](PHASE1_GAP_CLOSURE
 | 2026-02-11 | Wave 4: MONTHLY_BRIEF last 2 briefs | brief.ts: getLastBriefs(supabase, limit); memoryLoader: when taskType MONTHLY_BRIEF and db configured, fetch last 2 briefs from monthly_briefs and append "## Prior brief YYYY-MM" to bundle. |
 | 2026-02-11 | Wave 4: Memory loader token budget and truncation | memoryLoader: MEMORY_TOKEN_BUDGET 4000; estimateTokens (~4 chars/token); truncate assembled bundle by taking parts in order until budget, optionally truncate last part; content order preserved. |
 | 2026-02-11 | Wave 5 Task 1: memory index + GET /memory/index | memoryLoader: getMemoryIndex() returns { version, items: [{ path, category }] } from bundle paths. GET /admin/memory/index (Admin only); GET list/content unchanged. |
+| 2026-02-11 | Wave 5 Task 2: Admin Memory full API | GET /memory/items (?status=active), GET /memory/item/:id, GET /memory/versions (?status=draft), POST /memory/create, POST /memory/upload, POST /memory/approve, POST /memory/reject, GET /memory/change-log. All Admin-only; use memoryAdmin service; routes only when db configured. |
+| 2026-02-11 | Wave 5 Task 3: Admin Memory UI | Tabs: Active Memory, Drafts, Change History, Create/Upload. Active: table + View content. Drafts: table + Review → side-by-side diff + Approve/Reject. Change History: audit table (item_title from API). Create: form (path, title, type, tags, content). Upload: paste content + optional path/title/type. File-only fallback when DB not configured. GET /memory/version/:id + change-log item_title in backend. |
 
 ---
 

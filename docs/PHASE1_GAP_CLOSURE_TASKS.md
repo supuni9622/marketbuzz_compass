@@ -66,8 +66,8 @@ Low-risk; no change to existing UI flows except adding one table section.
 | Done | Task | phase1_gaps | Area | No-regression note |
 |------|------|-------------|------|--------------------|
 | [x] | memory_index.json (or equivalent) + GET /memory/index for discovery | §17 | API | GET /admin/memory/index returns { version, items: [{ path, category }] }; list/content unchanged |
-| [ ] | Admin Memory: full API (items, item/{id}, versions?status=draft, create, upload, approve, reject, change-log) | §4, §18 | API | New routes; existing GET list/content remain |
-| [ ] | Admin Memory UI: tabs Active / Drafts / Change History / Create-Upload; review screen with diff | §4, §18 | UI | Extend current Memory page; keep list + view |
+| [x] | Admin Memory: full API (items, item/{id}, versions?status=draft, create, upload, approve, reject, change-log) | §4, §18 | API | New routes; existing GET list/content remain |
+| [x] | Admin Memory UI: tabs Active / Drafts / Change History / Create-Upload; review screen with diff | §4, §18 | UI | Extend current Memory page; keep list + view |
 
 ---
 
