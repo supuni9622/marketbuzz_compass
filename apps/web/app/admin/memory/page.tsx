@@ -57,8 +57,8 @@ export default function AdminMemoryPage() {
       )}
 
       {!listLoading && !listError && (
-        <div className="mt-6 flex gap-6">
-          <aside className="w-64 shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-6 flex flex-col gap-6 md:flex-row">
+          <aside className="min-w-0 shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-4 md:w-64">
             <h2 className="text-sm font-semibold text-slate-800">Files by category</h2>
             <ul className="mt-2 space-y-1 text-sm">
               {Object.entries(byCategory).map(([cat, paths]) => (
