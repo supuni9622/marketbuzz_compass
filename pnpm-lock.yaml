@@ -16,6 +16,9 @@ importers:
       '@aws-sdk/client-sqs':
         specifier: ^3.700.0
         version: 3.985.0
+      '@fastify/aws-lambda':
+        specifier: ^6.4.0
+        version: 6.4.0
       '@fastify/cors':
         specifier: ^10.0.1
         version: 10.1.0
@@ -625,6 +628,9 @@ packages:
 
   '@fastify/ajv-compiler@4.0.5':
     resolution: {integrity: sha512-KoWKW+MhvfTRWL4qrhUwAAZoaChluo0m0vbiJlGMt2GXvL4LVPQEjt8kSpHI3IBq5Rez8fg+XeH3cneztq+C7A==}
+
+  '@fastify/aws-lambda@6.4.0':
+    resolution: {integrity: sha512-7iCx4Bl+SoeeRP0ALv1Rg4AR63yBW8XxgQiQ4OrTJApUObMzMtN1VPFtnoAqGhtpruAeVUTxgGpsW1hasYxU8Q==}
 
   '@fastify/busboy@3.2.0':
     resolution: {integrity: sha512-m9FVDXU3GT2ITSe0UaMA5rU3QkfC/UXtCU8y0gSN/GugTqtVldOBWIB5V6V3sbmenVZUIpU6f+mPEO2+m5iTaA==}
@@ -2972,6 +2978,8 @@ snapshots:
       ajv: 8.17.1
       ajv-formats: 3.0.1(ajv@8.17.1)
       fast-uri: 3.1.0
+
+  '@fastify/aws-lambda@6.4.0': {}
 
   '@fastify/busboy@3.2.0': {}
 
