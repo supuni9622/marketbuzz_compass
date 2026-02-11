@@ -4,6 +4,8 @@ This document lists gaps between **docs/PRD.md** (and related specs) and the cur
 
 **Scope:** MVP + Phase 1 only. Phase 2 (internal merchant DB, usage signals, predictive pre-risk) is out of scope here.
 
+**Cross-checked specs:** PRD, problem_statement, TECHNICAL_ARCHITECTURE, BRAND_AND_UI, UI_LAYOUT_SPEC, login_management; DATA_MODEL_SPEC, INGESTION_WORKFLOW, CLOVER_CSV_SCHEMA, AGENT_SPEC, NOVA_MEMORY_LOADING_ALGORITHM, GROWTH_PLANNING_SPEC, MRR_AND_MANUAL_OUTPUTS, MEMORY_FILE_STRUCTURE, ADMIN_MEMORY_MANAGER_UI_SPEC, DEPLOYMENT_ARCHITECTURE, LLM_MODEL_ROUTER_PSUDOCODE/workflow_budgets.json, progressql_supabase_rsl_decisions, MEMORY_AND_CACHE_INALIDATION_STRATEGY, MEMORY_CONTEXT_ITEMS.
+
 ---
 
 ## 1. Action Tables (PRD §2 C)
@@ -99,7 +101,7 @@ Gaps from cross-validation against BRAND_AND_UI.md and UI_LAYOUT_SPEC.md. The UI
 - **Current:** Pagination (fixed 25), Export CSV, Copy link. No search, no sorting, no page-size selector.
 - **Gap:** Add search and sorting where useful; add page-size selector (25/50/100). Optional: merchant detail drawer, playbook-driven columns.
 
-### Standalone pages 
+### Standalone pages
 
 - **Spec:** Dedicated Merchants page (sub-tabs: Lifecycle, NRA, Refunds, Uninstalls, High-risk churn); dedicated Revenue page (revenue lifecycle, cash reality, statement net).
 - **Current:** All on home (Brief + Scorecards + Action Center) plus Ask Nova, Growth Plan, Admin.
@@ -153,6 +155,135 @@ Users currently see technical or raw API messages in many places. Loading is par
 
 ---
 
+## 10. DATA_MODEL_SPEC
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| §8 Pagination response | API returns `data`, `page`, `page_size`, `total_rows`. | **Aligned.** No gap. |
+| §10 Data refresh: recompute list includes `growth_forecast_monthly` (optional Phase-1) | `recompute.ts` recomputes 6 tables only; **does not** call `growth_forecast_monthly`. | **Gap (optional):** No recompute of `growth_forecast_monthly`; doc says optional Phase-1. |
+| §9 Month/Year filtering | Doc says "Year → resolved to month range; Month → exact match." | **Partial:** API has `month`; no separate Year filter or explicit resolution to month range in API. |
+
+---
+
+## 11. INGESTION_WORKFLOW
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| S3 key format `clover_csv/{yyyy}/{mm}/{upload_id}.csv` | `apps/api/src/services/s3.ts` uses that format. | **Aligned.** |
+| `ingestion_runs`: `months_affected`, `recompute_status`, `nova_status` | Pipeline and upload routes set/read these. | **Aligned.** |
+| Recompute scope: "previous month" for At Risk | `recompute.ts` uses `expandMonthsScope` (months detected + prev). | **Aligned.** |
+| §11 Error handling: "Retry Nova" from Admin | No "Retry Nova" or retry-recompute UI/endpoint. | **Gap:** No Admin retry for Nova or recompute for `months_affected`. |
+
+---
+
+## 12. CLOVER_CSV_SCHEMA
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| §2 "On Hold" → normalize to ONHOLD | Parser `mapStatus()` only accepts literal `ONHOLD`; CSV "On Hold" becomes `"ON HOLD"` after `toUpperCase()` and maps to **OTHER**. | **Gap:** Normalize `"ON HOLD"` (and variants) to `ONHOLD` in parser so ONHOLD rows are not lumped into OTHER. |
+
+---
+
+## 13. AGENT_SPEC (Nova tools)
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| Tool contract: `list_merchants(type, …)` with types **Active, AtRisk, Lost, NRA, Refunded, Uninstalled, HighRiskChurn** | `tools.ts` supports Active, AtRisk, Lost, Refunded, Uninstalled. **No NRA or HighRiskChurn** list types. | **Gap:** Add `list_merchants` types **NRA** and **HighRiskChurn** (and corresponding API/merchant services if missing). |
+| Tools: `compare_kpi`, `get_definition`, `get_playbook`, `get_market_context`, `get_prior_briefs` | Not implemented; Nova has only `get_kpi`, `list_merchants`, `get_trend`, `get_growth_baseline`. | **Gap:** Knowledge/memory tools from spec not implemented (or covered only via pre-loaded memory context). |
+| Tools: `forecast_next_month`, `build_growth_plan` | Only `get_growth_baseline` exists; growth plan is generated in-agent from baseline + tools. | **Partial:** Acceptable if growth plan is produced in-agent; doc's `forecast_next_month` / `build_growth_plan` are not separate tools. |
+
+---
+
+## 14. NOVA_MEMORY_LOADING_ALGORITHM
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| §3 DB-backed registry (`memory_items`, `memory_versions`, S3 content) | Memory is **file-based** only (`memoryLoader.ts` reads from `memory/` or `MEMORY_PATH`). No DB tables, no S3 reads. | **Gap:** Algorithm doc assumes DB + S3 memory registry; implementation uses filesystem only (already called out in §4 and §7). |
+| Task classification + bundle map | `classifyTask()` and `MEMORY_BUNDLES` exist and align with doc (MONTHLY_BRIEF, GROWTH_PLAN, etc.). | **Aligned.** |
+| Briefs in bundle: "last 2 briefs" for MONTHLY_BRIEF | Bundles reference static paths only; **no dynamic "last 2 briefs"** loading from `briefs/YYYY-MM.md`. | **Gap:** MONTHLY_BRIEF bundle does not include "last 2 briefs" from file or DB; only fixed definition/playbook paths. |
+| Token budget / truncation (doc §5) | `loadMemoryBundle` does not truncate to token budget. | **Gap:** No token budget or truncation. |
+
+---
+
+## 15. GROWTH_PLANNING_SPEC
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| Step 5: Lever breakdown table, execution lists (At Risk to contact, upgrade candidates, win-back, NRA by plan) | Growth plan UI shows Nova markdown result only; no structured lever table or execution lists. | **Gap:** No structured **Lever Breakdown Table** or **Execution Lists** (retention/expansion/win-back/NRA) as in spec; narrative only. |
+| UI: "Required Charts — Line: last 6 months + target; Waterfall: baseline → levers → target" | No line chart (last 6 months + target) or waterfall chart. | **Gap:** Missing required charts (line + waterfall) on Growth Plan page. |
+
+---
+
+## 16. MRR_AND_MANUAL_OUTPUTS
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| Manual outputs → canonical tables | KPIs and merchant endpoints use `monthly_revenue_lifecycle`, `merchant_lifecycle_monthly`, NRA, refund/uninstall tables. | **Aligned.** |
+| Two at-risk definitions (lifecycle vs ONHOLD) | Lifecycle At Risk is implemented; ONHOLD (payment at risk) requires querying charges by `status_current = ONHOLD` — no dedicated endpoint or UI. | **Partial:** ONHOLD "at risk" list/API/UI not present (could be tracked under "Revenue lifecycle" or separate list). |
+
+---
+
+## 17. MEMORY_FILE_STRUCTURE
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| `memory_index.json` registry; GET `/memory/index` | No registry file or index endpoint; Admin memory uses `getMemoryFileList()` from bundle paths. | **Gap:** No `memory_index.json` or GET `/memory/index`. |
+| POST `/admin/memory/upload`, POST `/admin/memory/approve` | Only GET `/admin/memory/list` and GET `/admin/memory/content`. | **Gap:** Already in §4 (full Admin Memory Manager). |
+| Versioning model (`_versions/`, pointer file, change_log) | No versioning; files read directly. | **Gap:** No memory versioning or change log (aligns with §4). |
+
+---
+
+## 18. ADMIN_MEMORY_MANAGER_UI_SPEC
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| §10 Minimal API: GET items, GET item/{id}, GET versions?status=draft, POST create, upload, approve, reject, GET change-log | Only GET `/admin/memory/list` (file paths) and GET `/admin/memory/content?path=`. | **Gap:** Same as §4; full API surface (items, versions, create, upload, approve, reject, change-log) not implemented. |
+
+---
+
+## 19. DEPLOYMENT_ARCHITECTURE
+
+- **Doc** describes Lambda, API Gateway, RDS, S3, SQS, optional Redis, Cognito.
+- **Current:** PROGRESS: deployment not done (API/Worker/Web/DB prod).
+- **No new gap:** Deployment is "remaining"; doc is target architecture.
+
+---
+
+## 20. LLM_MODEL_ROUTER_PSUDOCODE & workflow_budgets.json
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| Router: workflow-specific caps and escalation | `router.ts` loads JSON and uses `compass_chat_qa` / `insight_summary_monthly` by workflow name; **only tier_a** used (no escalation to tier_b/tier_c). | **Gap:** No escalation along `escalation_path`, no tier_b/tier_c usage, no validation-triggered escalation. |
+| Circuit breaker (monthly/24h budget, tier_c %, output spike) | No circuit breaker; `evaluate_circuit_breaker` and safe-mode overrides not implemented. | **Gap:** Circuit breaker and safe-mode behavior from pseudo-code not implemented. |
+| workflow_budgets.json workflow IDs | Chat uses `compass_chat_qa`, brief uses `insight_summary_monthly`. Other workflows in JSON unused. | **Partial:** Acceptable for Phase 1; only chat + monthly brief workflows wired. |
+
+---
+
+## 21. progressql_supabase_rsl_decisions
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| RLS tripwire on internal tables; migration `000009_enable_rls_tripwire.sql` | Migration exists and enables RLS + deny-all policies on listed tables. | **Aligned.** No gap. |
+
+---
+
+## 22. MEMORY_AND_CACHE_INALIDATION_STRATEGY
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| L1 (in-process) + L2 (Redis/KV) + version-based invalidation | Memory is read from filesystem only; no L1/L2 cache, no version keying, no invalidation. | **Gap:** No memory cache layers or version-based invalidation (consistent with S3/memory store not implemented). |
+| DB as source of truth for current version; S3 for content | No DB/S3 memory store. | Already covered by §4 and §7. |
+
+---
+
+## 23. MEMORY_CONTEXT_ITEMS
+
+| Spec | Implementation | Gap |
+|------|-----------------|-----|
+| Doc lists 12 categories and paths (e.g. `/memory/definitions/metrics.md`, playbooks, briefs, admin). | `memoryLoader.ts` bundles use the same path structure (definitions, apps, market, playbooks, admin). Briefs are not loaded dynamically. | **Partial:** Structure aligned; "last briefs" and admin/context content depend on files existing and brief-loading logic (see §14 NOVA_MEMORY_LOADING_ALGORITHM). |
+
+---
+
 ## Summary
 
 | Area | Missing or partial |
@@ -166,3 +297,17 @@ Users currently see technical or raw API messages in many places. Loading is par
 | UI / storytelling (BRAND_AND_UI, UI_LAYOUT_SPEC) | Narrative actions (Show evidence, Generate growth plan, See who); optional filters (Year, Reset, Last Updated); NRA/4th scorecard; table search/sort/page size; optional Merchants/Revenue pages and evidence zone. Flow/smoothness: in-context next steps from brief, reduce long scroll (e.g. collapse/expand or anchor links), table search/sort/page size. |
 | Mobile responsiveness | App header: no breakpoints for tagline, no hamburger/mobile nav; header row squeezes/overflows on narrow screens. Viewport: confirm viewport meta tag in built HTML for proper mobile scaling. |
 | Error handling & loading | API client: map status codes to user-friendly messages; parse JSON error body; do not expose raw API/HTML. UI: show friendly messages everywhere; consistent fallback; mutation errors same style. Optional: consistent loading UI (e.g. BriefSection skeleton). |
+| DATA_MODEL_SPEC | Optional recompute of `growth_forecast_monthly`; Year/month resolution (API) partial. |
+| INGESTION_WORKFLOW | No Admin "Retry Nova" or retry recompute for affected months. |
+| CLOVER_CSV_SCHEMA | Parser: normalize "ON HOLD" (and variants) to ONHOLD. |
+| AGENT_SPEC (Nova tools) | Add list_merchants types NRA and HighRiskChurn; knowledge tools (get_definition, get_playbook, etc.) not implemented. |
+| NOVA_MEMORY_LOADING_ALGORITHM | DB/S3 memory registry not implemented (file-based only); MONTHLY_BRIEF bundle does not load "last 2 briefs"; no token truncation. |
+| GROWTH_PLANNING_SPEC | No structured lever table or execution lists; no line or waterfall charts on Growth Plan page. |
+| MRR_AND_MANUAL_OUTPUTS | ONHOLD (payment at risk) list/API/UI not implemented. |
+| MEMORY_FILE_STRUCTURE | No memory_index.json or GET /memory/index; versioning and change log not implemented (overlap with §4). |
+| ADMIN_MEMORY_MANAGER_UI_SPEC | Full API (items, versions, create, upload, approve, reject, change-log) not implemented (same as §4). |
+| DEPLOYMENT_ARCHITECTURE | No gap; deployment remaining per PROGRESS. |
+| LLM_MODEL_ROUTER / workflow_budgets | No escalation (tier_b/tier_c); no circuit breaker or safe-mode. |
+| progressql_supabase_rsl_decisions | Aligned; no gap. |
+| MEMORY_AND_CACHE_INALIDATION_STRATEGY | No L1/L2 cache or version-based invalidation. |
+| MEMORY_CONTEXT_ITEMS | Structure aligned; brief-loading and token budget gaps as in Nova memory algorithm. |
