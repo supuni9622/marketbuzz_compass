@@ -1,10 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
 import { getErrorMessage } from "@/lib/utils";
 import { useState } from "react";
+
+const ACTION_CENTER_IDS = [
+  "action-center",
+  "action-center-at-risk",
+  "action-center-lost",
+  "action-center-critical-churn",
+  "action-center-onhold",
+  "action-center-refunds",
+  "action-center-uninstalls",
+];
 
 interface MerchantRow {
   month: string;
@@ -167,11 +178,12 @@ interface OnHoldResponse {
   total_rows: number;
 }
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
 export function ActionCenterTables() {
   const api = useApiClient();
   const { monthApi, appId } = useFilters();
+  const [pageSize, setPageSize] = useState(25);
   const [atRiskPage, setAtRiskPage] = useState(1);
   const [lostPage, setLostPage] = useState(1);
   const [criticalChurnPage, setCriticalChurnPage] = useState(1);
@@ -180,13 +192,13 @@ export function ActionCenterTables() {
   const [uninstallsPage, setUninstallsPage] = useState(1);
 
   const atRiskQuery = useQuery({
-    queryKey: ["merchants", "lifecycle", monthApi, appId, "AtRisk", atRiskPage],
+    queryKey: ["merchants", "lifecycle", monthApi, appId, "AtRisk", atRiskPage, pageSize],
     queryFn: () => {
       const params: Record<string, string> = {
         month: monthApi,
         lifecycle_state: "AtRisk",
         page: String(atRiskPage),
-        page_size: String(PAGE_SIZE),
+        page_size: String(pageSize),
       };
       if (appId) params.app_id = appId;
       return api.get<LifecycleResponse>("/merchants/lifecycle", params);
@@ -194,13 +206,13 @@ export function ActionCenterTables() {
   });
 
   const lostQuery = useQuery({
-    queryKey: ["merchants", "lifecycle", monthApi, appId, "Lost", lostPage],
+    queryKey: ["merchants", "lifecycle", monthApi, appId, "Lost", lostPage, pageSize],
     queryFn: () => {
       const params: Record<string, string> = {
         month: monthApi,
         lifecycle_state: "Lost",
         page: String(lostPage),
-        page_size: String(PAGE_SIZE),
+        page_size: String(pageSize),
       };
       if (appId) params.app_id = appId;
       return api.get<LifecycleResponse>("/merchants/lifecycle", params);
@@ -208,12 +220,12 @@ export function ActionCenterTables() {
   });
 
   const refundsQuery = useQuery({
-    queryKey: ["merchants", "refunds", monthApi, appId, refundsPage],
+    queryKey: ["merchants", "refunds", monthApi, appId, refundsPage, pageSize],
     queryFn: () => {
       const params: Record<string, string> = {
         month: monthApi,
         page: String(refundsPage),
-        page_size: String(PAGE_SIZE),
+        page_size: String(pageSize),
       };
       if (appId) params.app_id = appId;
       return api.get<RefundsResponse>("/merchants/refunds", params);
@@ -221,12 +233,12 @@ export function ActionCenterTables() {
   });
 
   const uninstallsQuery = useQuery({
-    queryKey: ["merchants", "uninstalls", monthApi, appId, uninstallsPage],
+    queryKey: ["merchants", "uninstalls", monthApi, appId, uninstallsPage, pageSize],
     queryFn: () => {
       const params: Record<string, string> = {
         month: monthApi,
         page: String(uninstallsPage),
-        page_size: String(PAGE_SIZE),
+        page_size: String(pageSize),
       };
       if (appId) params.app_id = appId;
       return api.get<UninstallsResponse>("/merchants/uninstalls", params);
@@ -234,12 +246,12 @@ export function ActionCenterTables() {
   });
 
   const criticalChurnQuery = useQuery({
-    queryKey: ["merchants", "high-risk-churn", monthApi, appId, criticalChurnPage],
+    queryKey: ["merchants", "high-risk-churn", monthApi, appId, criticalChurnPage, pageSize],
     queryFn: () => {
       const params: Record<string, string> = {
         month: monthApi,
         page: String(criticalChurnPage),
-        page_size: String(PAGE_SIZE),
+        page_size: String(pageSize),
       };
       if (appId) params.app_id = appId;
       return api.get<HighRiskChurnResponse>("/merchants/high-risk-churn", params);
@@ -247,24 +259,62 @@ export function ActionCenterTables() {
   });
 
   const onHoldQuery = useQuery({
-    queryKey: ["merchants", "onhold", monthApi, appId, onHoldPage],
+    queryKey: ["merchants", "onhold", monthApi, appId, onHoldPage, pageSize],
     queryFn: () => {
       const params: Record<string, string> = {
         month: monthApi,
         page: String(onHoldPage),
-        page_size: String(PAGE_SIZE),
+        page_size: String(pageSize),
       };
       if (appId) params.app_id = appId;
       return api.get<OnHoldResponse>("/merchants/onhold", params);
     },
   });
 
+  useEffect(() => {
+    const hash = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
+    if (hash && ACTION_CENTER_IDS.includes(hash)) {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [monthApi, appId]);
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setAtRiskPage(1);
+    setLostPage(1);
+    setCriticalChurnPage(1);
+    setOnHoldPage(1);
+    setRefundsPage(1);
+    setUninstallsPage(1);
+  };
+
   return (
-    <section className="mt-8" aria-label="Action Center">
-      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Action Center</h2>
+    <section id="action-center" className="mt-8 scroll-mt-6" aria-label="Action Center">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Action Center</h2>
+        <div className="flex items-center gap-2">
+          <label htmlFor="action-center-page-size" className="text-sm text-slate-600 dark:text-slate-400">
+            Rows per page
+          </label>
+          <select
+            id="action-center-page-size"
+            value={pageSize}
+            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            aria-label="Rows per page"
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div className="mt-4 space-y-8">
-        <div>
+        <div id="action-center-at-risk" className="scroll-mt-6">
           <h3 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">At Risk</h3>
           <MerchantTable
             query={atRiskQuery}
@@ -273,7 +323,7 @@ export function ActionCenterTables() {
             exportLabel="at-risk"
           />
         </div>
-        <div>
+        <div id="action-center-lost" className="scroll-mt-6">
           <h3 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Lost</h3>
           <MerchantTable
             query={lostQuery}
@@ -282,7 +332,7 @@ export function ActionCenterTables() {
             exportLabel="lost"
           />
         </div>
-        <div>
+        <div id="action-center-critical-churn" className="scroll-mt-6">
           <h3 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Critical Churn</h3>
           <HighRiskChurnTable
             query={criticalChurnQuery}
@@ -290,7 +340,7 @@ export function ActionCenterTables() {
             currentPage={criticalChurnPage}
           />
         </div>
-        <div>
+        <div id="action-center-onhold" className="scroll-mt-6">
           <h3 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Payment at risk (ON HOLD)</h3>
           <OnHoldTable
             query={onHoldQuery}
@@ -298,7 +348,7 @@ export function ActionCenterTables() {
             currentPage={onHoldPage}
           />
         </div>
-        <div>
+        <div id="action-center-refunds" className="scroll-mt-6">
           <h3 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Refunds</h3>
           <RefundTable
             query={refundsQuery}
@@ -306,7 +356,7 @@ export function ActionCenterTables() {
             currentPage={refundsPage}
           />
         </div>
-        <div>
+        <div id="action-center-uninstalls" className="scroll-mt-6">
           <h3 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Uninstalls</h3>
           <UninstallTable
             query={uninstallsQuery}

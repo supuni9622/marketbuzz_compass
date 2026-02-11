@@ -1,6 +1,12 @@
 import "./globals.css";
 import { Providers } from "./providers";
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 const themeScript = `
 (function(){
   var t=localStorage.getItem('marketbuzz-theme');

@@ -22,6 +22,7 @@ interface KpisResponse {
   billed_amount: MetricWithCompare;
   collected_amount: MetricWithCompare;
   deposited_amount: MetricWithCompare;
+  nra_amount: MetricWithCompare;
   active_merchants: MetricWithCompare;
   refunded_amount: MetricWithCompare;
 }
@@ -75,7 +76,7 @@ export function Scorecards() {
     },
   });
 
-  const [expandedCard, setExpandedCard] = useState<"billed" | "active" | "collected" | "deposited" | "refunded" | null>(null);
+  const [expandedCard, setExpandedCard] = useState<"billed" | "active" | "collected" | "deposited" | "nra" | "refunded" | null>(null);
 
   if (isLoading) {
     return (
@@ -87,7 +88,7 @@ export function Scorecards() {
       >
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Scorecards</h2>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="h-32 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" />
           ))}
         </div>
@@ -109,6 +110,7 @@ export function Scorecards() {
   if (!data) return null;
 
   const { billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount } = data;
+  const nra_amount = data.nra_amount ?? { current: 0, compare: 0, delta: 0, delta_pct: null };
   const cardVariants = getCardVariants(reduceMotion ?? false);
   const cards = [
     {
@@ -149,6 +151,16 @@ export function Scorecards() {
       deltaPct: deposited_amount.delta_pct,
       trendMetric: "deposited_amount" as const,
       byAppKey: "deposited_amount" as const,
+      formatByApp: formatCurrency,
+    },
+    {
+      key: "nra" as const,
+      title: "NRA (New Revenue)",
+      value: formatCurrency(nra_amount.current),
+      delta: nra_amount.delta,
+      deltaPct: nra_amount.delta_pct,
+      trendMetric: "nra_amount" as const,
+      byAppKey: "nra_amount" as const,
       formatByApp: formatCurrency,
     },
     {

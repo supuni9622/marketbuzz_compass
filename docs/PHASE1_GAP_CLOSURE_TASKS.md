@@ -39,13 +39,13 @@ Low-risk; no change to existing UI flows except adding one table section.
 
 | Done | Task | phase1_gaps | Area | No-regression note |
 |------|------|-------------|------|--------------------|
-| [ ] | Brief section: add "Show evidence" and "Generate growth plan" buttons | §8 | UI | Links/actions only; no change to narrative content |
-| [ ] | In-context "See who" / deep links from brief (e.g. "12 at risk" → scroll/filter to At Risk table) | §8 | UI | URL or anchor + filter; existing tables unchanged |
-| [ ] | Action Center tables: add page-size selector (25/50/100) | §8 | UI + API | API already supports page_size; add dropdown |
+| [x] | Brief section: add "Show evidence" and "Generate growth plan" buttons | §8 | UI | Links/actions only; no change to narrative content |
+| [x] | In-context "See who" / deep links from brief (e.g. "12 at risk" → scroll/filter to At Risk table) | §8 | UI | URL or anchor + filter; existing tables unchanged |
+| [x] | Action Center tables: add page-size selector (25/50/100) | §8 | UI + API | API already supports page_size; add dropdown |
 | [ ] | Action Center tables: add search and sort where useful | §8 | UI + API | Optional; preserve default sort and pagination |
-| [ ] | Add NRA scorecard (4th card); optional Refunds & Uninstalls or Lifecycle card | §8 | UI | New card(s); existing three cards unchanged |
-| [ ] | Optional: Year dropdown, Reset filters, Last Updated (from ingestion run) | §8 | UI | Add to GlobalFilters; existing month/compare/app unchanged |
-| [ ] | Mobile: header breakpoints (tagline, hamburger nav); viewport meta | §8 | UI | Responsive only; desktop layout unchanged |
+| [x] | Add NRA scorecard (4th card); optional Refunds & Uninstalls or Lifecycle card | §8 | UI | New card(s); existing three cards unchanged |
+| [x] | Optional: Year dropdown, Reset filters, Last Updated (from ingestion run) | §8 | UI | Add to GlobalFilters; existing month/compare/app unchanged |
+| [x] | Mobile: header breakpoints (tagline, hamburger nav); viewport meta | §8 | UI | Responsive only; desktop layout unchanged |
 
 ---
 

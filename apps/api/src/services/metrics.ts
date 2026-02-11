@@ -22,6 +22,8 @@ export interface KpisResponse {
   collected_amount: MetricWithCompare;
   deposited_amount: MetricWithCompare;
   refunded_amount: MetricWithCompare;
+  nra_amount: MetricWithCompare;
+  nra_count: MetricWithCompare;
   active_merchants: MetricWithCompare;
 }
 
@@ -90,6 +92,29 @@ async function aggregateMrl(
   );
 }
 
+async function aggregateNra(
+  supabase: SupabaseClient,
+  month: MonthDate,
+  appId: string | undefined
+): Promise<{ nra_amount: number; nra_count: number }> {
+  let q = supabase
+    .from("nra_monthly")
+    .select("nra_amount, nra_count")
+    .eq("month", month);
+  if (appId) q = q.eq("app_id", appId);
+  const { data, error } = await q;
+  if (error) throw error;
+  const rows = (data ?? []) as { nra_amount: number; nra_count: number }[];
+  const sum = rows.reduce(
+    (acc, r) => ({
+      nra_amount: acc.nra_amount + Number(r.nra_amount ?? 0),
+      nra_count: acc.nra_count + Number(r.nra_count ?? 0),
+    }),
+    { nra_amount: 0, nra_count: 0 }
+  );
+  return sum;
+}
+
 async function countActiveMerchants(
   supabase: SupabaseClient,
   month: MonthDate,
@@ -118,9 +143,11 @@ export async function getKpis(
   const m = toMonthDate(month);
   const c = compareMonth ? toMonthDate(compareMonth) : prevMonth(m);
 
-  const [currentMrl, compareMrl, currentActive, compareActive] = await Promise.all([
+  const [currentMrl, compareMrl, currentNra, compareNra, currentActive, compareActive] = await Promise.all([
     aggregateMrl(supabase, m, appId),
     aggregateMrl(supabase, c, appId),
+    aggregateNra(supabase, m, appId),
+    aggregateNra(supabase, c, appId),
     countActiveMerchants(supabase, m, appId),
     countActiveMerchants(supabase, c, appId),
   ]);
@@ -133,6 +160,8 @@ export async function getKpis(
     collected_amount: metricWithCompare(currentMrl.collected_amount, compareMrl.collected_amount),
     deposited_amount: metricWithCompare(currentMrl.deposited_amount, compareMrl.deposited_amount),
     refunded_amount: metricWithCompare(currentMrl.refunded_amount, compareMrl.refunded_amount),
+    nra_amount: metricWithCompare(currentNra.nra_amount, compareNra.nra_amount),
+    nra_count: metricWithCompare(currentNra.nra_count, compareNra.nra_count),
     active_merchants: metricWithCompare(currentActive, compareActive),
   };
 }
@@ -147,7 +176,8 @@ export type TrendMetric =
   | "active_merchants"
   | "collected_amount"
   | "deposited_amount"
-  | "refunded_amount";
+  | "refunded_amount"
+  | "nra_amount";
 
 export interface TrendResponse {
   metric: TrendMetric;
@@ -182,6 +212,15 @@ export async function getTrend(
       points.push({ month, value: count });
     }
     return { metric: "active_merchants", points };
+  }
+
+  if (params.metric === "nra_amount") {
+    const points: TrendPoint[] = [];
+    for (const month of months) {
+      const nra = await aggregateNra(supabase, month, params.app_id);
+      points.push({ month, value: nra.nra_amount });
+    }
+    return { metric: "nra_amount", points };
   }
 
   const points: TrendPoint[] = [];
@@ -221,6 +260,7 @@ export interface MetricsByAppResponse {
   billed_amount: ByAppRow[];
   collected_amount: ByAppRow[];
   deposited_amount: ByAppRow[];
+  nra_amount: ByAppRow[];
   active_merchants: ByAppRow[];
   refunded_amount: ByAppRow[];
 }
@@ -261,6 +301,17 @@ export async function getMetricsByApp(
     value: Number(r.refunded_amount ?? 0),
   }));
 
+  const { data: nraRows, error: nraError } = await supabase
+    .from("nra_monthly")
+    .select("app_id, app_name, nra_amount")
+    .eq("month", m);
+  if (nraError) throw nraError;
+  const nra_amount: ByAppRow[] = (nraRows ?? []).map((r: { app_id: string; app_name: string; nra_amount: number }) => ({
+    app_id: r.app_id,
+    app_name: r.app_name ?? r.app_id,
+    value: Number(r.nra_amount ?? 0),
+  }));
+
   const { data: activeRows, error: activeError } = await supabase
     .from("merchant_lifecycle_monthly")
     .select("app_id, app_name")
@@ -281,5 +332,5 @@ export async function getMetricsByApp(
     value: count,
   }));
 
-  return { month: m, billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount };
+  return { month: m, billed_amount, collected_amount, deposited_amount, nra_amount, active_merchants, refunded_amount };
 }

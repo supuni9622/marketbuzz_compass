@@ -133,7 +133,7 @@ export async function metricsRoutes(
           properties: {
             metric: {
               type: "string",
-              enum: ["billed_amount", "active_merchants", "collected_amount", "deposited_amount", "refunded_amount"],
+              enum: ["billed_amount", "active_merchants", "collected_amount", "deposited_amount", "refunded_amount", "nra_amount"],
               description: "Metric to trend",
             },
             months_back: {
@@ -174,11 +174,11 @@ export async function metricsRoutes(
         app_id?: string;
       };
       const metric = q.metric as string | undefined;
-      const validMetrics = ["billed_amount", "active_merchants", "collected_amount", "deposited_amount", "refunded_amount"];
+      const validMetrics = ["billed_amount", "active_merchants", "collected_amount", "deposited_amount", "refunded_amount", "nra_amount"];
       if (!metric || !validMetrics.includes(metric)) {
         return reply.status(400).send({
           error:
-            "metric is required and must be billed_amount, active_merchants, collected_amount, deposited_amount, or refunded_amount",
+            "metric is required and must be billed_amount, active_merchants, collected_amount, deposited_amount, refunded_amount, or nra_amount",
         });
       }
       if (!db.isConfigured()) {
@@ -206,7 +206,7 @@ export async function metricsRoutes(
       preHandler: [authMiddleware],
       schema: {
         description:
-          "Metrics by app for a month (billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount per app). For Evidence zone charts.",
+          "Metrics by app for a month (billed_amount, collected_amount, deposited_amount, nra_amount, active_merchants, refunded_amount per app). For Evidence zone charts.",
         tags: ["Metrics"],
         querystring: {
           type: "object",
@@ -243,6 +243,17 @@ export async function metricsRoutes(
                 },
               },
               deposited_amount: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    app_id: { type: "string" },
+                    app_name: { type: "string" },
+                    value: { type: "number" },
+                  },
+                },
+              },
+              nra_amount: {
                 type: "array",
                 items: {
                   type: "object",

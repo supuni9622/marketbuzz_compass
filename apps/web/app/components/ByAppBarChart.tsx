@@ -15,11 +15,12 @@ interface MetricsByAppResponse {
   billed_amount: ByAppRow[];
   collected_amount: ByAppRow[];
   deposited_amount: ByAppRow[];
+  nra_amount: ByAppRow[];
   active_merchants: ByAppRow[];
   refunded_amount: ByAppRow[];
 }
 
-type MetricKey = "billed_amount" | "collected_amount" | "deposited_amount" | "active_merchants" | "refunded_amount";
+type MetricKey = "billed_amount" | "collected_amount" | "deposited_amount" | "nra_amount" | "active_merchants" | "refunded_amount";
 
 interface ByAppBarChartProps {
   month: string;

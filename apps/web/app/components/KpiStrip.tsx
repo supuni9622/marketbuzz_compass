@@ -19,6 +19,8 @@ interface KpisResponse {
   billed_count: MetricWithCompare;
   collected_amount: MetricWithCompare;
   deposited_amount: MetricWithCompare;
+  nra_amount: MetricWithCompare;
+  nra_count: MetricWithCompare;
   active_merchants: MetricWithCompare;
   refunded_amount: MetricWithCompare;
 }
@@ -64,8 +66,8 @@ export function KpiStrip() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5" aria-label="KPI strip loading">
-        {[1, 2, 3, 4, 5].map((i) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="KPI strip loading">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
           <div key={i} className="h-24 animate-pulse rounded-xl border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-600 dark:bg-slate-700" />
         ))}
       </div>
@@ -83,9 +85,10 @@ export function KpiStrip() {
   if (!data) return null;
 
   const { billed_amount, collected_amount, deposited_amount, active_merchants, refunded_amount } = data;
+  const nra_amount = data.nra_amount ?? { current: 0, compare: 0, delta: 0, delta_pct: null };
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5" aria-label="KPI strip">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="KPI strip">
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">
         <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Gross Billed</p>
         <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(billed_amount.current)}</p>
@@ -112,6 +115,13 @@ export function KpiStrip() {
         <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(deposited_amount.current)}</p>
         <p className="mt-1 text-sm">
           <DeltaBadge delta={deposited_amount.delta} deltaPct={deposited_amount.delta_pct} />
+        </p>
+      </div>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">
+        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">NRA (New Revenue)</p>
+        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(nra_amount.current)}</p>
+        <p className="mt-1 text-sm">
+          <DeltaBadge delta={nra_amount.delta} deltaPct={nra_amount.delta_pct} />
         </p>
       </div>
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800">

@@ -4,6 +4,14 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getCurrentMonth, getPreviousMonth, APP_OPTIONS } from "@/lib/filters";
 
+function resetParams(pathname: string, searchParams: URLSearchParams): string {
+  const next = new URLSearchParams();
+  const month = getCurrentMonth();
+  next.set("month", month);
+  next.set("compare", getPreviousMonth(month));
+  return `${pathname}?${next.toString()}`;
+}
+
 const MONTH_OPTIONS = (() => {
   const now = new Date();
   const options: { value: string; label: string }[] = [];
@@ -187,7 +195,15 @@ export function GlobalFilters() {
           onChange={(a) => setParams({ app: a })}
           maxHeight="max-h-48"
         />
-        <div className="ml-auto pb-0.5">
+        <div className="ml-auto flex items-center gap-2 pb-0.5">
+          <button
+            type="button"
+            onClick={() => router.replace(resetParams(pathname, searchParams))}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+            title="Reset to current month and previous month comparison"
+          >
+            Reset filters
+          </button>
           <button
             type="button"
             onClick={copyLink}

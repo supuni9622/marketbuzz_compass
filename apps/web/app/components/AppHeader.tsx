@@ -23,7 +23,27 @@ export function AppHeader() {
   const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setNavOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [navOpen]);
+
+  useEffect(() => {
+    if (!navOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) setNavOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [navOpen]);
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -44,31 +64,59 @@ export function AppHeader() {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [userMenuOpen]);
 
+  const navLinks = (
+    <>
+      <Link href="/" className={navItemClass("/", pathname)} onClick={() => setNavOpen(false)}>
+        Brief
+      </Link>
+      <Link href="/ask" className={navItemClass("/ask", pathname)} onClick={() => setNavOpen(false)}>
+        Ask Nova
+      </Link>
+      <Link href="/growth-plan" className={navItemClass("/growth-plan", pathname)} onClick={() => setNavOpen(false)}>
+        Growth Plan
+      </Link>
+      {isAdmin && (
+        <Link href="/admin" className={navItemClass("/admin", pathname)} onClick={() => setNavOpen(false)}>
+          Admin
+        </Link>
+      )}
+    </>
+  );
+
   return (
     <>
       <header className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2">
           <Link
             href="/"
-            className="text-xl font-bold text-teal-600 transition-colors hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+            className="text-xl font-bold text-teal-600 transition-colors hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 shrink-0"
           >
             MarketBuzz Compass
           </Link>
-          <p className="text-base font-medium text-teal-700 dark:text-teal-300">Interpret. Guide. Plan. Warn.</p>
-          <nav className="flex items-center gap-1" aria-label="Main">
-            <Link href="/" className={navItemClass("/", pathname)}>
-              Brief
-            </Link>
-            <Link href="/ask" className={navItemClass("/ask", pathname)}>
-              Ask Nova
-            </Link>
-            <Link href="/growth-plan" className={navItemClass("/growth-plan", pathname)}>
-              Growth Plan
-            </Link>
-            {isAdmin && (
-              <Link href="/admin" className={navItemClass("/admin", pathname)}>
-                Admin
-              </Link>
+          <p className="hidden text-base font-medium text-teal-700 dark:text-teal-300 lg:block">Interpret. Guide. Plan. Warn.</p>
+          <nav ref={navRef} className="relative flex items-center gap-1" aria-label="Main">
+            <div className="hidden md:flex md:items-center md:gap-1">{navLinks}</div>
+            <button
+              type="button"
+              onClick={() => setNavOpen((o) => !o)}
+              aria-expanded={navOpen}
+              aria-label="Open menu"
+              className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 md:hidden"
+            >
+              {navOpen ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+            {navOpen && (
+              <div className="absolute right-0 top-full z-50 mt-1 flex w-48 flex-col rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-800 md:hidden [&>a]:block [&>a]:w-full [&>a]:px-3 [&>a]:py-2 [&>a]:text-left">
+                {navLinks}
+              </div>
             )}
             {(user ?? token) && (
               <div className="relative" ref={userMenuRef}>

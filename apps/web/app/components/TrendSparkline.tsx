@@ -10,7 +10,7 @@ interface TrendResponse {
 }
 
 interface TrendSparklineProps {
-  metric: "billed_amount" | "active_merchants" | "collected_amount" | "deposited_amount" | "refunded_amount";
+  metric: "billed_amount" | "active_merchants" | "collected_amount" | "deposited_amount" | "refunded_amount" | "nra_amount";
   /** Height in pixels */
   height?: number;
   /** Months to show (default 12) */
