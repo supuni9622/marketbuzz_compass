@@ -57,7 +57,7 @@ function parseAmount(val: string): number | null {
 }
 
 function mapStatus(status: string): ChargeStatus {
-  const upper = String(status || "").trim().toUpperCase();
+  const upper = String(status || "").trim().toUpperCase().replace(/\s+/g, "");
   if (upper === "REFUNDED" || upper === "REFUND") return "REFUND";
   if (["BILLED", "COLLECTED", "DEPOSITED", "ONHOLD"].includes(upper)) {
     return upper as ChargeStatus;

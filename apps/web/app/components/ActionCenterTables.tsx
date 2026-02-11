@@ -75,6 +75,29 @@ function uninstallRowsToCsv(rows: UninstallRow[]): string {
   return lines.join("\r\n");
 }
 
+interface HighRiskChurnRow {
+  month: string;
+  merchant_id: string;
+  merchant_name: string;
+  app_id: string;
+  refund_amount: number;
+  uninstall_date: string;
+  last_active_month: string;
+}
+
+function highRiskChurnRowsToCsv(rows: HighRiskChurnRow[]): string {
+  const header = ["Month", "Merchant ID", "Merchant Name", "App ID", "Refund Amount", "Uninstall Date", "Last Active Month"];
+  const lines = [header.map(escapeCsvCell).join(",")];
+  for (const r of rows) {
+    lines.push(
+      [r.month, r.merchant_id, r.merchant_name, r.app_id, String(r.refund_amount), r.uninstall_date, r.last_active_month].map(
+        escapeCsvCell
+      ).join(",")
+    );
+  }
+  return lines.join("\r\n");
+}
+
 function downloadCsv(csv: string, filename: string): void {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -106,6 +129,13 @@ interface UninstallsResponse {
   total_rows: number;
 }
 
+interface HighRiskChurnResponse {
+  data: HighRiskChurnRow[];
+  page: number;
+  page_size: number;
+  total_rows: number;
+}
+
 const PAGE_SIZE = 25;
 
 export function ActionCenterTables() {
@@ -113,6 +143,7 @@ export function ActionCenterTables() {
   const { monthApi, appId } = useFilters();
   const [atRiskPage, setAtRiskPage] = useState(1);
   const [lostPage, setLostPage] = useState(1);
+  const [criticalChurnPage, setCriticalChurnPage] = useState(1);
   const [refundsPage, setRefundsPage] = useState(1);
   const [uninstallsPage, setUninstallsPage] = useState(1);
 
@@ -170,6 +201,19 @@ export function ActionCenterTables() {
     },
   });
 
+  const criticalChurnQuery = useQuery({
+    queryKey: ["merchants", "high-risk-churn", monthApi, appId, criticalChurnPage],
+    queryFn: () => {
+      const params: Record<string, string> = {
+        month: monthApi,
+        page: String(criticalChurnPage),
+        page_size: String(PAGE_SIZE),
+      };
+      if (appId) params.app_id = appId;
+      return api.get<HighRiskChurnResponse>("/merchants/high-risk-churn", params);
+    },
+  });
+
   return (
     <section className="mt-8" aria-label="Action Center">
       <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Action Center</h2>
@@ -191,6 +235,14 @@ export function ActionCenterTables() {
             onPageChange={setLostPage}
             currentPage={lostPage}
             exportLabel="lost"
+          />
+        </div>
+        <div>
+          <h3 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Critical Churn</h3>
+          <HighRiskChurnTable
+            query={criticalChurnQuery}
+            onPageChange={setCriticalChurnPage}
+            currentPage={criticalChurnPage}
           />
         </div>
         <div>
@@ -486,6 +538,106 @@ function UninstallTable({
             type="button"
             onClick={() => {
               downloadCsv(uninstallRowsToCsv(data.data), `merchants-uninstalls-page${data.page}.csv`);
+            }}
+            className="rounded-lg bg-teal-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md dark:bg-teal-500 dark:hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1"
+          >
+            Export CSV
+          </button>
+          {totalPages > 1 && (
+            <>
+              <button
+                type="button"
+                disabled={data.page <= 1}
+                onClick={() => onPageChange(currentPage - 1)}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-600"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={data.page >= totalPages}
+                onClick={() => onPageChange(currentPage + 1)}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-600"
+              >
+                Next
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HighRiskChurnTable({
+  query,
+  onPageChange,
+  currentPage,
+}: {
+  query: { data?: HighRiskChurnResponse; isLoading: boolean; error: Error | null };
+  onPageChange: (p: number) => void;
+  currentPage: number;
+}) {
+  const { data, isLoading, error } = query;
+  if (isLoading) {
+    return (
+      <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-600">
+        <div className="h-48 animate-pulse bg-slate-100 dark:bg-slate-700" />
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300" role="alert">
+        Failed to load. {error.message}
+      </div>
+    );
+  }
+  if (!data || data.data.length === 0) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-slate-600 dark:border-slate-600 dark:bg-slate-700/50 dark:text-slate-300">
+        No critical churn merchants in this month.
+      </div>
+    );
+  }
+  const totalPages = Math.ceil(data.total_rows / data.page_size);
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md dark:border-slate-600 dark:bg-slate-800">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-600">
+          <thead className="bg-slate-50 dark:bg-slate-700/50">
+            <tr>
+              <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Merchant</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">App</th>
+              <th className="px-4 py-2 text-right font-medium text-slate-700 dark:text-slate-300">Refund Amount</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Uninstall Date</th>
+              <th className="px-4 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Last Active</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200">
+            {data.data.map((row) => (
+              <tr key={`${row.merchant_id}-${row.app_id}`} className="transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-700/50">
+                <td className="px-4 py-2 text-slate-800 dark:text-slate-200">{row.merchant_name}</td>
+                <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.app_id}</td>
+                <td className="px-4 py-2 text-right text-slate-800">
+                  {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(row.refund_amount)}
+                </td>
+                <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.uninstall_date}</td>
+                <td className="px-4 py-2 text-slate-600 dark:text-slate-400">{row.last_active_month}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 px-4 py-2 dark:border-slate-600">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Page {data.page} of {totalPages} ({data.total_rows} total)
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              downloadCsv(highRiskChurnRowsToCsv(data.data), `merchants-critical-churn-page${data.page}.csv`);
             }}
             className="rounded-lg bg-teal-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-teal-700 hover:shadow-md dark:bg-teal-500 dark:hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1"
           >

@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
 
 interface RunRow {
@@ -57,8 +58,45 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function RetryNovaButton({
+  runId,
+  api,
+  retryingRunId,
+  setRetryingRunId,
+  onDone,
+}: {
+  runId: string;
+  api: { post: (path: string, body?: unknown, params?: Record<string, string>) => Promise<unknown> };
+  retryingRunId: string | null;
+  setRetryingRunId: (id: string | null) => void;
+  onDone: () => void;
+}) {
+  const isRetrying = retryingRunId === runId;
+  async function handleRetry() {
+    setRetryingRunId(runId);
+    try {
+      await api.post("/admin/brief/retry", undefined, { run_id: runId });
+      onDone();
+    } finally {
+      setRetryingRunId(null);
+    }
+  }
+  return (
+    <button
+      type="button"
+      disabled={isRetrying}
+      onClick={handleRetry}
+      className="rounded border border-teal-600 px-2 py-1 text-xs font-medium text-teal-700 transition-colors hover:bg-teal-50 disabled:opacity-50 dark:border-teal-500 dark:text-teal-300 dark:hover:bg-teal-900/30"
+    >
+      {isRetrying ? "Retrying…" : "Retry Nova"}
+    </button>
+  );
+}
+
 export function UploadStatusList() {
   const api = useApiClient();
+  const queryClient = useQueryClient();
+  const [retryingRunId, setRetryingRunId] = useState<string | null>(null);
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin", "uploads"],
     queryFn: () => api.get<UploadsResponse>("/admin/uploads", { limit: "25" }),
@@ -102,6 +140,8 @@ export function UploadStatusList() {
                 <th className="px-3 py-2 text-right font-medium text-slate-700 dark:text-slate-300">Rows</th>
                 <th className="px-3 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Run</th>
                 <th className="px-3 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Recompute</th>
+                <th className="px-3 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Nova</th>
+                <th className="px-3 py-2 text-left font-medium text-slate-700 dark:text-slate-300">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-600">
@@ -123,7 +163,22 @@ export function UploadStatusList() {
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    {u.run ? <StatusBadge status={u.run.recompute_status ?? "pending"} /> : "—"}
+                    {u.run ? <StatusBadge status={u.run.nova_status ?? "pending"} /> : "—"}
+                  </td>
+                  <td className="px-3 py-2">
+                    {u.run && u.run.recompute_status === "success" ? (
+                      <RetryNovaButton
+                        runId={u.run.run_id}
+                        api={api}
+                        retryingRunId={retryingRunId}
+                        setRetryingRunId={setRetryingRunId}
+                        onDone={() => {
+                          void queryClient.invalidateQueries({ queryKey: ["admin", "uploads"] });
+                        }}
+                      />
+                    ) : (
+                      "—"
+                    )}
                   </td>
                 </tr>
               ))}

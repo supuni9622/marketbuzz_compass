@@ -15,10 +15,10 @@ Low-risk; no change to existing UI flows except adding one table section.
 
 | Done | Task | phase1_gaps | Area | No-regression note |
 |------|------|-------------|------|--------------------|
-| [ ] | Parser: normalize "ON HOLD" (and variants) to ONHOLD so CSV "On Hold" does not map to OTHER | §12 | API (ingestion/parser) | Add one branch in mapStatus(); existing ONHOLD/OTHER rows unchanged |
-| [ ] | Critical Churn API: GET /merchants/high-risk-churn (paginated, month, app_id) | §1 | API | New route; reuse merchant list pattern; table already exists |
-| [ ] | Critical Churn UI: Action Center section for "Critical Churn" using new endpoint | §1 | UI | New section + table; same pattern as At Risk / Lost |
-| [ ] | Admin: Retry Nova — endpoint or button to re-run brief for a run’s latest month | §11 | API (+ optional UI) | Call existing brief generation; idempotent |
+| [x] | Parser: normalize "ON HOLD" (and variants) to ONHOLD so CSV "On Hold" does not map to OTHER | §12 | API (ingestion/parser) | Add one branch in mapStatus(); existing ONHOLD/OTHER rows unchanged |
+| [x] | Critical Churn API: GET /merchants/high-risk-churn (paginated, month, app_id) | §1 | API | New route; reuse merchant list pattern; table already exists |
+| [x] | Critical Churn UI: Action Center section for "Critical Churn" using new endpoint | §1 | UI | New section + table; same pattern as At Risk / Lost |
+| [x] | Admin: Retry Nova — endpoint or button to re-run brief for a run’s latest month | §11 | API (+ optional UI) | Call existing brief generation; idempotent |
 
 ---
 

@@ -9,6 +9,7 @@ import {
   listMerchantsLifecycle,
   listRefundMerchants,
   listUninstallMerchants,
+  listHighRiskChurnMerchants,
 } from "../services/merchants.js";
 
 export async function merchantsRoutes(
@@ -251,6 +252,79 @@ export async function merchantsRoutes(
       } catch (err) {
         app.log.error(err);
         return reply.status(500).send({ error: "Failed to fetch uninstall list" });
+      }
+    }
+  );
+
+  app.get(
+    "/high-risk-churn",
+    {
+      preHandler: [authMiddleware],
+      schema: {
+        description:
+          "Paginated list of high-risk churn merchants (Refunded ∩ Uninstalled ∩ Lost) for a given month. Source: high_risk_churn_merchants.",
+        tags: ["Merchants"],
+        querystring: {
+          type: "object",
+          properties: {
+            month: { type: "string", description: "Month (YYYY-MM or YYYY-MM-01)" },
+            app_id: { type: "string", description: "Optional filter by app" },
+            page: { type: "integer", minimum: 1 },
+            page_size: { type: "integer", minimum: 1, maximum: 100 },
+          },
+          required: ["month"],
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              data: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    month: { type: "string" },
+                    merchant_id: { type: "string" },
+                    merchant_name: { type: "string" },
+                    app_id: { type: "string" },
+                    refund_amount: { type: "number" },
+                    uninstall_date: { type: "string" },
+                    last_active_month: { type: "string" },
+                  },
+                },
+              },
+              page: { type: "integer" },
+              page_size: { type: "integer" },
+              total_rows: { type: "integer" },
+            },
+          },
+          400: { type: "object", properties: { error: { type: "string" } } },
+          503: { type: "object", properties: { error: { type: "string" } } },
+          500: { type: "object", properties: { error: { type: "string" } } },
+        },
+      },
+    },
+    async (request, reply) => {
+      const q = request.query as { month?: string; app_id?: string; page?: string; page_size?: string };
+      const month = q.month?.trim();
+      if (!month) {
+        return reply.status(400).send({ error: "month is required (YYYY-MM or YYYY-MM-01)" });
+      }
+      if (!db.isConfigured()) {
+        return reply.status(503).send({ error: "Database not configured" });
+      }
+      try {
+        const supabase = db.get();
+        const result = await listHighRiskChurnMerchants(supabase, {
+          month,
+          app_id: q.app_id || undefined,
+          page: q.page ? parseInt(q.page, 10) : undefined,
+          page_size: q.page_size ? parseInt(q.page_size, 10) : undefined,
+        });
+        return result;
+      } catch (err) {
+        app.log.error(err);
+        return reply.status(500).send({ error: "Failed to fetch high-risk churn list" });
       }
     }
   );

@@ -1,8 +1,9 @@
 /**
  * Admin brief generation: trigger Nova to generate monthly brief and upsert to monthly_briefs.
+ * Retry Nova: re-run brief for a run's latest affected month (Admin only).
  */
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
-import { requireAdminOrInternalBriefKey } from "../../auth/middleware.js";
+import { requireAdmin, requireAdminOrInternalBriefKey } from "../../auth/middleware.js";
 import { db } from "../../db.js";
 import { config } from "../../config.js";
 import { runNovaProactiveBrief } from "../../nova/agent.js";
@@ -82,6 +83,105 @@ export async function adminBriefRoutes(
         return result;
       } catch (err) {
         app.log.error(err);
+        return reply.status(500).send({
+          error: err instanceof Error ? err.message : "Brief generation failed",
+        });
+      }
+    }
+  );
+
+  app.post(
+    "/brief/retry",
+    {
+      preHandler: [requireAdmin],
+      schema: {
+        description:
+          "Retry Nova brief generation for a run's latest affected month. Admin only.",
+        tags: ["Admin", "Brief"],
+        querystring: {
+          type: "object",
+          properties: {
+            run_id: { type: "string", description: "ingestion_runs.run_id" },
+          },
+          required: ["run_id"],
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              month: { type: "string" },
+              headline_gross_billed: { type: ["number", "null"] },
+              mom_delta: { type: ["number", "null"] },
+              mom_delta_pct: { type: ["number", "null"] },
+              brief_markdown: { type: "string" },
+            },
+          },
+          400: { type: "object", properties: { error: { type: "string" } } },
+          404: { type: "object", properties: { error: { type: "string" } } },
+          503: { type: "object", properties: { error: { type: "string" } } },
+          500: { type: "object", properties: { error: { type: "string" } } },
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!config.openaiApiKey) {
+        return reply.status(503).send({
+          error: "Nova is not configured (OPENAI_API_KEY missing)",
+        });
+      }
+      if (!db.isConfigured()) {
+        return reply.status(503).send({ error: "Database not configured" });
+      }
+      const q = request.query as { run_id?: string };
+      const runId = q.run_id?.trim();
+      if (!runId) {
+        return reply.status(400).send({ error: "run_id is required" });
+      }
+      const supabase = db.get();
+      const { data: runRow, error: runError } = await supabase
+        .from("ingestion_runs")
+        .select("run_id, months_affected")
+        .eq("run_id", runId)
+        .single();
+      if (runError || !runRow) {
+        return reply.status(404).send({ error: "Run not found" });
+      }
+      const monthsAffected = (runRow.months_affected as string[] | null) ?? [];
+      const sorted = [...monthsAffected].filter(Boolean).sort();
+      const latestMonth = sorted.length > 0 ? sorted[sorted.length - 1] : null;
+      if (!latestMonth) {
+        return reply.status(400).send({
+          error: "Run has no months_affected; cannot determine month for brief",
+        });
+      }
+      const month = latestMonth.length >= 7 ? `${latestMonth.slice(0, 7)}-01` : latestMonth;
+      try {
+        const result = await runNovaProactiveBrief({
+          month,
+          created_by: "nova",
+        });
+        await upsertBrief(supabase, {
+          month: result.month,
+          created_by: "nova",
+          headline_gross_billed: result.headline_gross_billed,
+          mom_delta: result.mom_delta,
+          mom_delta_pct: result.mom_delta_pct,
+          brief_markdown: result.brief_markdown,
+        });
+        await supabase
+          .from("ingestion_runs")
+          .update({ nova_status: "success" })
+          .eq("run_id", runId);
+        return result;
+      } catch (err) {
+        app.log.error(err);
+        await supabase
+          .from("ingestion_runs")
+          .update({
+            nova_status: "failure",
+            error_message: err instanceof Error ? err.message : "Brief generation failed",
+          })
+          .eq("run_id", runId);
         return reply.status(500).send({
           error: err instanceof Error ? err.message : "Brief generation failed",
         });

@@ -215,3 +215,75 @@ export async function listUninstallMerchants(
     total_rows: totalRows,
   };
 }
+
+export interface HighRiskChurnMerchantRow {
+  month: string;
+  merchant_id: string;
+  merchant_name: string;
+  app_id: string;
+  refund_amount: number;
+  uninstall_date: string;
+  last_active_month: string;
+}
+
+export interface HighRiskChurnListResponse {
+  data: HighRiskChurnMerchantRow[];
+  page: number;
+  page_size: number;
+  total_rows: number;
+}
+
+/**
+ * List high-risk churn merchants (Refunded ∩ Uninstalled ∩ Lost) from high_risk_churn_merchants (paginated).
+ */
+export async function listHighRiskChurnMerchants(
+  supabase: SupabaseClient,
+  params: {
+    month: MonthDate;
+    app_id?: string;
+    page?: number;
+    page_size?: number;
+  }
+): Promise<HighRiskChurnListResponse> {
+  const month = toMonthDate(params.month);
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(1, params.page_size ?? DEFAULT_PAGE_SIZE)
+  );
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let q = supabase
+    .from("high_risk_churn_merchants")
+    .select("month, merchant_id, merchant_name, app_id, refund_amount, uninstall_date, last_active_month", {
+      count: "exact",
+    })
+    .eq("month", month)
+    .order("merchant_id", { ascending: true })
+    .order("app_id", { ascending: true })
+    .range(from, to);
+
+  if (params.app_id) q = q.eq("app_id", params.app_id);
+
+  const { data, count, error } = await q;
+  if (error) throw error;
+
+  const rows = (data ?? []) as HighRiskChurnMerchantRow[];
+  const totalRows = count ?? 0;
+
+  return {
+    data: rows.map((r) => ({
+      month: String(r.month).slice(0, 10),
+      merchant_id: r.merchant_id,
+      merchant_name: r.merchant_name,
+      app_id: r.app_id,
+      refund_amount: Number(r.refund_amount),
+      uninstall_date: String(r.uninstall_date).slice(0, 10),
+      last_active_month: String(r.last_active_month).slice(0, 10),
+    })),
+    page,
+    page_size: pageSize,
+    total_rows: totalRows,
+  };
+}

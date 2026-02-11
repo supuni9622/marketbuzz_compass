@@ -133,7 +133,7 @@ Goal: Ingestion + canonical tables + basic Monthly Brief (no Nova)
 
 Ordered tasks and details: [docs/PHASE1_GAP_CLOSURE_TASKS.md](PHASE1_GAP_CLOSURE_TASKS.md). Gap list: [docs/phase1_gaps.md](phase1_gaps.md).
 
-- [ ] **Wave 1:** Parser ON HOLD → ONHOLD; Critical Churn API + UI; Retry Nova
+- [x] **Wave 1:** Parser ON HOLD → ONHOLD; Critical Churn API + UI; Retry Nova
 - [ ] **Wave 2:** Collected/Deposited in UI; API client + UI error handling; list_merchants NRA + HighRiskChurn; ONHOLD list API (+ UI)
 - [ ] **Wave 3:** Brief actions (Show evidence, Generate growth plan); See who / deep links; table page-size/search/sort; NRA scorecard; optional filters; mobile
 - [ ] **Wave 4:** Growth plan lever table + charts; MONTHLY_BRIEF last 2 briefs; memory token truncation
@@ -206,6 +206,7 @@ Ordered tasks and details: [docs/PHASE1_GAP_CLOSURE_TASKS.md](PHASE1_GAP_CLOSURE
 | 2026-02-10 | Proactive brief architecture article | docs/articles/proactive-brief-trigger-architecture.md — after upload + scheduled, shared endpoint, internal auth, month selection, Mermaid diagrams; added to docs/articles/README.md. |
 | 2026-02-10 | Ask Nova chat UI/UX | UserAvatar component; NovaAvatar size + withBg; empty state with large Nova + welcome text + 4 example question chips; teal gradient chat area, rounded bubbles, Framer Motion entrance/stagger (useReducedMotion). Renamed Ask MarketBuzz → Ask Nova (nav, page title, component). |
 | 2026-02-10 | UI polish: nav, dropdowns, sticky, taglines | AppHeader: nav active states (pathname), user dropdown (email + Sign out; click-outside + Escape). Pill-style nav (rounded-lg, bg-teal-100 active, no underline) in AppHeader and Admin layout. System tagline teal-700; Nova full tagline in NarrativeBlock. Sticky wrapper (header + GlobalFilters + AppTabs) on home. Page background gradient (teal-50/50 → slate-50/80). Scorecards “Show evidence” as outline button + chevron. Custom FilterDropdown in GlobalFilters (Month, Compare, App); Compare options key = value+label to fix duplicate key. |
+| 2026-02-11 | Wave 1 gap closure | Parser: "ON HOLD" → ONHOLD (mapStatus trim spaces). GET /merchants/high-risk-churn + listHighRiskChurnMerchants. Action Center: Critical Churn section + HighRiskChurnTable + Export CSV. POST /admin/brief/retry?run_id=xxx; Admin uploads table: Nova column + Retry Nova button. |
 
 ---
 
