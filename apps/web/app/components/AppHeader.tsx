@@ -114,39 +114,32 @@ export function AppHeader() {
               )}
             </button>
             {navOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 flex w-48 flex-col rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-800 md:hidden [&>a]:block [&>a]:w-full [&>a]:px-3 [&>a]:py-2 [&>a]:text-left">
+              <div className="absolute right-0 top-full z-50 mt-1 flex w-56 flex-col rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-800 md:hidden [&>a]:block [&>a]:w-full [&>a]:px-3 [&>a]:py-2 [&>a]:text-left">
                 {navLinks}
-              </div>
-            )}
-            {(user ?? token) && (
-              <div className="relative" ref={userMenuRef}>
+                <div className="my-1 border-t border-slate-200 dark:border-slate-600" />
                 <button
                   type="button"
-                  onClick={() => setUserMenuOpen((o) => !o)}
-                  aria-expanded={userMenuOpen}
-                  aria-haspopup="menu"
-                  className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 shadow-sm transition-colors hover:border-teal-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:border-teal-500 dark:hover:bg-slate-600"
+                  onClick={() => {
+                    toggleTheme();
+                  }}
+                  aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700"
                 >
-                  <UserAvatar size={28} className="flex-shrink-0" />
-                  <span className="max-w-[140px] truncate" title={user?.email ?? "Account"}>
-                    {user?.email || "Account"}
-                  </span>
-                  <svg
-                    className={`h-4 w-4 flex-shrink-0 text-slate-500 transition-transform dark:text-slate-400 ${userMenuOpen ? "rotate-180" : ""}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  {theme === "dark" ? (
+                    <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                  )}
+                  <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
                 </button>
-                {userMenuOpen && (
-                  <div
-                    className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-800"
-                    role="menu"
-                  >
-                    <div className="border-b border-slate-100 px-3 py-2 dark:border-slate-600">
+                {(user ?? token) && (
+                  <>
+                    <div className="border-t border-slate-200 dark:border-slate-600" />
+                    <div className="px-3 py-2">
                       <p className="truncate text-xs text-slate-500 dark:text-slate-400" title={user?.email ?? "Account"}>
                         {user?.email || "Account"}
                       </p>
@@ -154,34 +147,83 @@ export function AppHeader() {
                     <button
                       type="button"
                       onClick={() => {
-                        setUserMenuOpen(false);
+                        setNavOpen(false);
                         logout();
                       }}
                       className="w-full px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-slate-100"
-                      role="menuitem"
                     >
                       Sign out
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
             )}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className="rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
-            >
-              {theme === "dark" ? (
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ) : (
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
+            <div className="hidden md:flex md:items-center md:gap-1">
+              {(user ?? token) && (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setUserMenuOpen((o) => !o)}
+                    aria-expanded={userMenuOpen}
+                    aria-haspopup="menu"
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 shadow-sm transition-colors hover:border-teal-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:border-teal-500 dark:hover:bg-slate-600"
+                  >
+                    <UserAvatar size={28} className="flex-shrink-0" />
+                    <span className="max-w-[140px] truncate" title={user?.email ?? "Account"}>
+                      {user?.email || "Account"}
+                    </span>
+                    <svg
+                      className={`h-4 w-4 flex-shrink-0 text-slate-500 transition-transform dark:text-slate-400 ${userMenuOpen ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {userMenuOpen && (
+                    <div
+                      className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-800"
+                      role="menu"
+                    >
+                      <div className="border-b border-slate-100 px-3 py-2 dark:border-slate-600">
+                        <p className="truncate text-xs text-slate-500 dark:text-slate-400" title={user?.email ?? "Account"}>
+                          {user?.email || "Account"}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          logout();
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                        role="menuitem"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
-            </button>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                className="rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+              >
+                {theme === "dark" ? (
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </nav>
         </div>
       </header>
