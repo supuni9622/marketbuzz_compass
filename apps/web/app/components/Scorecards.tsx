@@ -7,8 +7,10 @@ import { useAuth } from "@/app/auth/AuthProvider";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
 import { getErrorMessage } from "@/lib/utils";
+import Link from "next/link";
 import { TrendSparkline } from "./TrendSparkline";
 import { ByAppBarChart } from "./ByAppBarChart";
+import { NovaAvatar } from "./NovaAvatar";
 
 interface MetricWithCompare {
   current: number;
@@ -179,6 +181,20 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
         closed: { opacity: 0, height: 0 },
       };
 
+  const askNovaStrip = (
+    <Link
+      href="/ask"
+      className="mt-3 flex items-center gap-3 rounded-lg border border-teal-200 bg-teal-50/50 px-3 py-2 text-sm text-teal-800 transition hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-teal-600 dark:bg-slate-800/50 dark:text-teal-200 dark:hover:bg-teal-900/30"
+      aria-label="Ask Nova to explain this data"
+    >
+      <NovaAvatar size={40} className="flex-shrink-0" />
+      <span className="font-medium">Ask Nova to explain this data</span>
+      <svg className="h-4 w-4 flex-shrink-0 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+      </svg>
+    </Link>
+  );
+
   const grid = (
     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {cards.map((card) => (
@@ -230,5 +246,10 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
         ))}
     </div>
   );
-  return wrap(grid);
+  return wrap(
+    <>
+      {askNovaStrip}
+      {grid}
+    </>
+  );
 }

@@ -8,6 +8,7 @@ import { useApiClient } from "@/lib/api/useApiClient";
 import { getErrorMessage } from "@/lib/utils";
 import { useFilters } from "@/app/hooks/useFilters";
 import { NarrativeBlock } from "./NarrativeBlock";
+import { NovaExplainer } from "./NovaExplainer";
 
 interface BriefResponse {
   month: string;
@@ -64,13 +65,17 @@ export function BriefSection() {
   return (
     <section className="mt-6" aria-label="Monthly Brief">
       <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">MarketBuzz Monthly Brief</h2>
-      <div className="mt-4">
-        <NarrativeBlock
-          content={content}
-          placeholder={placeholder}
-          isUpdating={isLoading}
-          hasNewContent={hasNewContent}
-        />
+      <div className="mt-4 flex flex-wrap items-start gap-6">
+        <NovaExplainer variant="video" size="lg" caption="Nova presents this month's brief" />
+        <div className="min-w-0 flex-1">
+            <NarrativeBlock
+            content={content}
+            placeholder={placeholder}
+            isUpdating={isLoading}
+            hasNewContent={hasNewContent}
+            showAvatar={false}
+          />
+        </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <a

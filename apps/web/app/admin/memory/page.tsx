@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { getErrorMessage } from "@/lib/utils";
+import { NovaAvatar } from "@/app/components/NovaAvatar";
 
 // --- Types (match API responses) ---
 interface MemoryItemRow {
@@ -232,12 +233,17 @@ export default function AdminMemoryPage() {
 
   return (
     <main>
-      <h1 className="text-2xl font-bold text-slate-800">Nova Memory</h1>
-      <p className="mt-2 text-slate-600">
-        {dbAvailable
-          ? "Manage memory items (definitions, playbooks, apps, market). Approve drafts to update what Nova trusts."
-          : "Browse memory files used by Nova (definitions, playbooks, apps, market, admin). Read-only."}
-      </p>
+      <div className="flex flex-wrap items-start gap-4">
+        <NovaAvatar size={56} withBg className="flex-shrink-0 ring-2 ring-teal-100 rounded-full" />
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-slate-800">Nova Memory</h1>
+          <p className="mt-2 text-slate-600">
+            {dbAvailable
+              ? "Manage memory items (definitions, playbooks, apps, market). Approve drafts to update what Nova trusts."
+              : "Browse memory files used by Nova (definitions, playbooks, apps, market, admin). Read-only."}
+          </p>
+        </div>
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
         {dbAvailable && (

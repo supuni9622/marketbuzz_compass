@@ -11,6 +11,8 @@ export interface NarrativeBlockProps {
   isUpdating?: boolean;
   /** When true, briefly highlight the text block (new content just loaded) */
   hasNewContent?: boolean;
+  /** When false, hide the small avatar (e.g. when brief uses only the large Nova image). Default true. */
+  showAvatar?: boolean;
 }
 
 /**
@@ -22,13 +24,14 @@ export function NarrativeBlock({
   placeholder,
   isUpdating,
   hasNewContent,
+  showAvatar = true,
 }: NarrativeBlockProps) {
   return (
     <section
       className={`nova-entrance flex gap-4 rounded-xl border border-slate-200 bg-gradient-to-br from-teal-50/50 to-white p-4 shadow-md dark:border-slate-600 dark:from-slate-800/80 dark:to-slate-800 ${isUpdating ? "nova-updating" : ""}`}
       aria-label="Nova monthly brief"
     >
-      <NovaAvatar />
+      {showAvatar && <NovaAvatar />}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-teal-600 dark:text-teal-400">Nova</p>
         <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
