@@ -1,12 +1,28 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 import { AppHeader } from "../components/AppHeader";
 import { NovaAvatar } from "../components/NovaAvatar";
 import { UserAvatar } from "../components/UserAvatar";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "../hooks/useFilters";
+
+/** Markdown styling for Nova's message bubble */
+const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
+  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  ul: ({ children }) => <ul className="mb-2 list-disc pl-5 space-y-0.5">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-2 list-decimal pl-5 space-y-0.5">{children}</ol>,
+  li: ({ children }) => <li className="leading-snug">{children}</li>,
+  h1: ({ children }) => <h1 className="text-base font-semibold mt-2 mb-1 first:mt-0">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-sm font-semibold mt-2 mb-1 first:mt-0">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-sm font-medium mt-1.5 mb-0.5 first:mt-0">{children}</h3>,
+  code: ({ children }) => <code className="rounded bg-slate-100 px-1 py-0.5 text-xs dark:bg-slate-700">{children}</code>,
+  pre: ({ children }) => <pre className="overflow-x-auto rounded bg-slate-100 p-2 text-xs my-2 dark:bg-slate-700">{children}</pre>,
+};
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -27,12 +43,15 @@ const EXAMPLE_QUESTIONS = [
 
 export default function AskNovaPage() {
   const api = useApiClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { monthApi, compareMonthApi, appId } = useFilters();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const hasAutoSentRef = useRef(false);
   const reduceMotion = useReducedMotion();
 
   const scrollToBottom = useCallback(() => {
@@ -93,6 +112,23 @@ export default function AskNovaPage() {
     },
     [sendMessage]
   );
+
+  // Pre-fill and auto-send when opening with ?q= (e.g. from scorecard "Ask Nova to explain this data")
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (!q || hasAutoSentRef.current || messages.length > 0) return;
+    hasAutoSentRef.current = true;
+    try {
+      const decoded = decodeURIComponent(q);
+      if (decoded.trim()) {
+        setInput(decoded);
+        sendMessage(decoded);
+      }
+    } catch {
+      // ignore malformed q
+    }
+    router.replace("/ask", { scroll: false });
+  }, [searchParams, router, sendMessage, messages.length]);
 
   const messageVariants = reduceMotion
     ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
@@ -195,7 +231,13 @@ export default function AskNovaPage() {
                   <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
                     {msg.role === "user" ? "You" : "Nova"}
                   </span>
-                  <div className="mt-1 whitespace-pre-wrap">{msg.content}</div>
+                  {msg.role === "assistant" ? (
+                    <div className="mt-1 markdown-content">
+                      <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="mt-1 whitespace-pre-wrap">{msg.content}</div>
+                  )}
                 </div>
               </motion.div>
             ))}

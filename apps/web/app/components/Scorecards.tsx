@@ -121,6 +121,8 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
       trendMetric: "billed_amount" as const,
       byAppKey: "billed_amount" as const,
       formatByApp: formatCurrency,
+      askNovaQuestion:
+        "Explain about gross billed amount over the last few months. What are the trends, drivers, and any suggestions?",
     },
     {
       key: "active" as const,
@@ -131,6 +133,8 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
       trendMetric: "active_merchants" as const,
       byAppKey: "active_merchants" as const,
       formatByApp: formatNumber,
+      askNovaQuestion:
+        "Explain about active merchants count over the last few months. What are the trends and suggestions?",
     },
     {
       key: "collected" as const,
@@ -141,6 +145,8 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
       trendMetric: "collected_amount" as const,
       byAppKey: "collected_amount" as const,
       formatByApp: formatCurrency,
+      askNovaQuestion:
+        "Explain about collected amount over the last few months. What are the trends and suggestions?",
     },
     {
       key: "deposited" as const,
@@ -151,6 +157,8 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
       trendMetric: "deposited_amount" as const,
       byAppKey: "deposited_amount" as const,
       formatByApp: formatCurrency,
+      askNovaQuestion:
+        "Explain about deposited amount over the last few months. What are the trends and suggestions?",
     },
     {
       key: "nra" as const,
@@ -161,6 +169,8 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
       trendMetric: "nra_amount" as const,
       byAppKey: "nra_amount" as const,
       formatByApp: formatCurrency,
+      askNovaQuestion:
+        "Explain about new revenue (NRA) over the last few months. What are the trends and suggestions?",
     },
     {
       key: "refunded" as const,
@@ -171,6 +181,8 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
       trendMetric: "refunded_amount" as const,
       byAppKey: "refunded_amount" as const,
       formatByApp: formatCurrency,
+      askNovaQuestion:
+        "Explain about refunded amount over the last few months. What are the trends and suggestions?",
     },
   ];
 
@@ -181,75 +193,71 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
         closed: { opacity: 0, height: 0 },
       };
 
-  const askNovaStrip = (
-    <Link
-      href="/ask"
-      className="mt-3 flex items-center gap-3 rounded-lg border border-teal-200 bg-teal-50/50 px-3 py-2 text-sm text-teal-800 transition hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-teal-600 dark:bg-slate-800/50 dark:text-teal-200 dark:hover:bg-teal-900/30"
-      aria-label="Ask Nova to explain this data"
-    >
-      <NovaAvatar size={40} className="flex-shrink-0" />
-      <span className="font-medium">Ask Nova to explain this data</span>
-      <svg className="h-4 w-4 flex-shrink-0 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-      </svg>
-    </Link>
-  );
-
   const grid = (
     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {cards.map((card) => (
-          <div
-            key={card.key}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800"
+        <div
+          key={card.key}
+          className="relative rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800"
+        >
+          {/* Upper right corner only: Ask Nova link — does not affect Show evidence / evidence area */}
+          <Link
+            href={`/ask?q=${encodeURIComponent(card.askNovaQuestion)}`}
+            className="absolute right-3 top-3 flex flex-col items-center gap-0.5 px-1 py-1 text-center text-xs font-medium text-teal-700 transition hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:text-teal-300 dark:hover:text-teal-200"
+            title={`Ask Nova to explain ${card.title} data`}
+            aria-label={`Ask Nova to explain ${card.title} data`}
           >
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{card.title}</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{card.value}</p>
-            <p className="mt-1 text-sm">
-              <DeltaBadge delta={card.delta} deltaPct={card.deltaPct} />
-            </p>
-            <TrendSparkline metric={card.trendMetric} monthsBack={12} />
-            <button
-              type="button"
-              onClick={() => setExpandedCard((c) => (c === card.key ? null : card.key))}
-              className="mt-2 flex items-center gap-1.5 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-sm font-medium text-teal-700 shadow-sm transition-colors hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-teal-600 dark:bg-slate-800 dark:text-teal-300 dark:hover:bg-teal-900/30"
+            <NovaAvatar size={28} className="flex-shrink-0" />
+            <span className="leading-tight max-w-[72px]">Ask Nova: {card.title}</span>
+            <svg className="h-3 w-3 flex-shrink-0 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+
+          {/* Main content unchanged: title, value, delta, sparkline, Show evidence, evidence area */}
+          <p className="pr-20 text-sm font-medium text-slate-600 dark:text-slate-400">{card.title}</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{card.value}</p>
+          <p className="mt-1 text-sm">
+            <DeltaBadge delta={card.delta} deltaPct={card.deltaPct} />
+          </p>
+          <TrendSparkline metric={card.trendMetric} monthsBack={12} />
+          <button
+            type="button"
+            onClick={() => setExpandedCard((c) => (c === card.key ? null : card.key))}
+            className="mt-2 flex items-center gap-1.5 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-sm font-medium text-teal-700 shadow-sm transition-colors hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-teal-600 dark:bg-slate-800 dark:text-teal-300 dark:hover:bg-teal-900/30"
+          >
+            {expandedCard === card.key ? "Hide evidence" : "Show evidence"}
+            <svg
+              className={`h-4 w-4 flex-shrink-0 text-teal-600 transition-transform dark:text-teal-400 ${expandedCard === card.key ? "rotate-180" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden
             >
-              {expandedCard === card.key ? "Hide evidence" : "Show evidence"}
-              <svg
-                className={`h-4 w-4 flex-shrink-0 text-teal-600 transition-transform dark:text-teal-400 ${expandedCard === card.key ? "rotate-180" : ""}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <AnimatePresence initial={false}>
+            {expandedCard === card.key && (
+              <motion.div
+                initial="closed"
+                animate="open"
+                exit="closed"
+                variants={evidenceVariants}
+                transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
+                className="overflow-hidden border-t border-slate-100 pt-3 dark:border-slate-600"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <AnimatePresence initial={false}>
-              {expandedCard === card.key && (
-                <motion.div
-                  initial="closed"
-                  animate="open"
-                  exit="closed"
-                  variants={evidenceVariants}
-                  transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
-                  className="overflow-hidden border-t border-slate-100 pt-3 dark:border-slate-600"
-                >
-                  <ByAppBarChart
-                    month={data.month}
-                    metricKey={card.byAppKey}
-                    formatValue={card.formatByApp}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
+                <ByAppBarChart
+                  month={data.month}
+                  metricKey={card.byAppKey}
+                  formatValue={card.formatByApp}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ))}
     </div>
   );
-  return wrap(
-    <>
-      {askNovaStrip}
-      {grid}
-    </>
-  );
+  return wrap(grid);
 }

@@ -30,7 +30,7 @@ export function BriefSection() {
   });
 
   const placeholder = data?.placeholder ?? true;
-  const content = data?.brief_markdown ?? "Summary pending — Nova coming soon.";
+  const content = placeholder ? "" : (data?.brief_markdown ?? "");
 
   useEffect(() => {
     if (isLoading) return;
@@ -65,10 +65,11 @@ export function BriefSection() {
   return (
     <section className="mt-6" aria-label="Monthly Brief">
       <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">MarketBuzz Monthly Brief</h2>
-      <div className="mt-4 flex flex-wrap items-start gap-6">
+      <div className="mt-4 flex flex-wrap items-stretch gap-6">
         <NovaExplainer variant="video" size="lg" caption="Nova presents this month's brief" />
-        <div className="min-w-0 flex-1">
+        <div className="min-h-[200px] min-w-0 flex-1">
             <NarrativeBlock
+            className="h-full min-h-full"
             content={content}
             placeholder={placeholder}
             isUpdating={isLoading}

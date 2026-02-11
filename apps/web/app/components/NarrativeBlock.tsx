@@ -13,6 +13,8 @@ export interface NarrativeBlockProps {
   hasNewContent?: boolean;
   /** When false, hide the small avatar (e.g. when brief uses only the large Nova image). Default true. */
   showAvatar?: boolean;
+  /** Optional class for the root section (e.g. min-height to match adjacent column). */
+  className?: string;
 }
 
 /**
@@ -25,15 +27,16 @@ export function NarrativeBlock({
   isUpdating,
   hasNewContent,
   showAvatar = true,
+  className: sectionClassName,
 }: NarrativeBlockProps) {
   return (
     <section
-      className={`nova-entrance flex gap-4 rounded-xl border border-slate-200 bg-gradient-to-br from-teal-50/50 to-white p-4 shadow-md dark:border-slate-600 dark:from-slate-800/80 dark:to-slate-800 ${isUpdating ? "nova-updating" : ""}`}
+      className={`nova-entrance flex gap-4 rounded-xl border border-slate-200 bg-gradient-to-br from-teal-50/50 to-white p-4 shadow-md dark:border-slate-600 dark:from-slate-800/80 dark:to-slate-800 ${isUpdating ? "nova-updating" : ""} ${sectionClassName ?? ""}`.trim()}
       aria-label="Nova monthly brief"
     >
       {showAvatar && <NovaAvatar />}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-teal-600 dark:text-teal-400">Nova</p>
+        <p className="text-sm font-medium text-teal-600 dark:text-teal-400">Hello, I&apos;m nova.</p>
         <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
           Your revenue analyst, I watch the numbers so you don&apos;t have to.
         </p>
