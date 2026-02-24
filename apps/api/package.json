@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "build:lambda": "esbuild src/lambda/ingestion.ts --bundle --platform=node --target=node20 --outfile=dist-lambda/ingestion.js",
-    "build:api-lambda": "esbuild src/lambda/api.ts --bundle --platform=node --target=node20 --outfile=dist-lambda/api.mjs --format=esm --external:node:crypto --external:node:stream --external:node:util --external:node:buffer --external:node:url --external:node:path --external:node:fs --external:node:os --external:node:http --external:node:https --external:node:net --external:node:zlib --external:node:events",
+    "build:api-lambda": "esbuild src/lambda/api.ts --bundle --platform=node --target=node20 --outfile=dist-lambda/api.js --format=cjs --external:node:crypto --external:node:stream --external:node:util --external:node:buffer --external:node:url --external:node:path --external:node:fs --external:node:os --external:node:http --external:node:https --external:node:net --external:node:zlib --external:node:events",
     "start": "node dist/index.js",
     "db:migrate": "supabase db push",
     "db:generate": "supabase migration new"

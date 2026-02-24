@@ -1,6 +1,6 @@
-# API Lambda Deployment — What We Did & Resolution
+# API Lambda Deployment — What We Did & Current Blocker
 
-Notes for deploying the MarketBuzz Compass API (Fastify) as AWS Lambda behind API Gateway. Last updated: 2026-02-24.
+Notes for deploying the MarketBuzz Compass API (Fastify) as AWS Lambda behind API Gateway. Last updated: 2026-02-11.
 
 ---
 
@@ -10,14 +10,14 @@ Notes for deploying the MarketBuzz Compass API (Fastify) as AWS Lambda behind AP
 
 - **`apps/api/src/app.ts`** — Added `buildApp(options?: { serverUrl?: string })` that creates the Fastify app, registers CORS, Swagger, all routes; returns the app without calling `listen`. Used by both local server and Lambda.
 - **`apps/api/src/index.ts`** — Refactored to call `buildApp({ serverUrl: http://localhost:${port} })`, then `app.listen()`. Keeps `appRef` for `close()`.
-- **`apps/api/src/lambda/api.ts`** — Lambda handler: **lazy init** (no top-level `await`) so the bundle can be CJS; on first invoke calls `buildApp()`, wraps with `@fastify/aws-lambda`, `await app.ready()`, caches and invokes. Uses payload 2.0 for API Gateway HTTP API.
+- **`apps/api/src/lambda/api.ts`** — Lambda handler: top-level `await buildApp()`, wrap with `@fastify/aws-lambda`, `await app.ready()`, export `handler`. Uses payload 2.0 for API Gateway HTTP API.
 
 ### 2. Build and package
 
 - **Dependency:** `@fastify/aws-lambda` in `apps/api/package.json`.
-- **Script:** `build:api-lambda` — esbuild bundles `src/lambda/api.ts` → **`dist-lambda/api.js`** (**CJS**), Node 20, with Node built-ins externalized:
+- **Script:** `build:api-lambda` — esbuild bundles `src/lambda/api.ts` → `dist-lambda/api.mjs` (ESM), Node 20, with **Node built-ins externalized** to avoid dynamic `require` in ESM:
   - `--external:node:crypto`, `node:stream`, `node:util`, `node:buffer`, `node:url`, `node:path`, `node:fs`, `node:os`, `node:http`, `node:https`, `node:net`, `node:zlib`, `node:events`
-- **Zip:** `api.js` at zip root. For Nova (workflow budgets), include **`docs/workflow_budgets.json`** in the zip (copy from repo root `docs/workflow_budgets.json` so Lambda can read it via `process.cwd()/docs/workflow_budgets.json`). Handler in Lambda: **`api.handler`**.
+- **Zip:** Only `dist-lambda/api.mjs` at zip root. Handler in Lambda: **`api.handler`**.
 
 ### 3. AWS setup
 
@@ -30,9 +30,9 @@ Notes for deploying the MarketBuzz Compass API (Fastify) as AWS Lambda behind AP
 
 ---
 
-## Resolved: "Dynamic require of node:crypto"
+## Current Blocker
 
-**Previous error:** Lambda failed at **init** (cold start) with:
+**Error:** Lambda fails at **init** (cold start) with:
 
 ```text
 Init Error
@@ -49,7 +49,7 @@ Init Error
 ```
 
 - **Meaning:** Some code in the bundle (or a dependency like `jose`) is still doing a **dynamic** `require('node:crypto')`, which Node’s ESM loader does not allow. Marking `node:crypto` as **external** in esbuild leaves an import for Node to resolve, but if the dependency uses `require('node:crypto')` internally, that call remains in the bundle and fails at runtime.
-- **Status:** Resolved 2026-02-24 by bundling as CJS and using lazy init in the Lambda handler (no top-level await). Redeploy with `api.js` from `build:api-lambda`.
+- **Status:** Adding `--external:node:crypto` (and other `node:*`) did **not** fix it; the error persists after rebuild and redeploy.
 
 ---
 
@@ -83,6 +83,6 @@ Init Error
 | Lambda name | marketbuzz-compass-api |
 | Handler | api.handler |
 | Build | `pnpm --filter @marketbuzz/api build:api-lambda` |
-| Output | apps/api/dist-lambda/api.js |
-| Zip | api.js at root; include docs/workflow_budgets.json for Nova |
+| Output | apps/api/dist-lambda/api.mjs |
+| Zip | Only api.mjs at root → api-lambda.zip |
 | API Gateway | HTTP API, ANY / + ANY /{proxy+}, payload 2.0 |

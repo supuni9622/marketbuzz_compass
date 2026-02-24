@@ -6,7 +6,10 @@ import { readFile } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// In Lambda (CJS bundle), import.meta.url is undefined; use process.cwd() so loadBudgets can find docs/workflow_budgets.json.
+const __dirname = process.env.AWS_LAMBDA_FUNCTION_NAME
+  ? process.cwd()
+  : path.dirname(fileURLToPath(import.meta.url));
 
 /** Map spec model names to current OpenAI model IDs (update when new models ship). */
 const MODEL_MAP: Record<string, string> = {

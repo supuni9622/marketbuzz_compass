@@ -36,9 +36,10 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       servers: [{ url: serverUrl, description: "API" }],
     },
   });
-  await app.register(swaggerUi, {
-    routePrefix: "/docs",
-  });
+  // In Lambda, swagger-ui tries to read static/logo.svg from the filesystem; skip it to avoid ENOENT.
+  if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    await app.register(swaggerUi, { routePrefix: "/docs" });
+  }
 
   await app.register(healthRoutes, { prefix: "/health" });
   await app.register(adminUploadRoutes, { prefix: "/admin" });

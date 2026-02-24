@@ -3,10 +3,13 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // In Lambda, env vars come from the function config; no .env file.
-// fileURLToPath(import.meta.url) is undefined in the CJS bundle, so skip it.
+// In CJS bundle import.meta.url is undefined; only call fileURLToPath when we have a URL.
 if (typeof process.env.AWS_LAMBDA_FUNCTION_NAME === "undefined") {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  loadEnv({ path: path.resolve(__dirname, "../../../.env") });
+  const url = typeof import.meta !== "undefined" && import.meta?.url;
+  if (url) {
+    const __dirname = path.dirname(fileURLToPath(url));
+    loadEnv({ path: path.resolve(__dirname, "../../../.env") });
+  }
 }
 
 export const config = {
