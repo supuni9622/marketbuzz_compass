@@ -11,7 +11,10 @@ export function getCurrentMonth(): string {
 }
 
 export function getPreviousMonth(month: string): string {
-  const [y, m] = month.split("-").map(Number);
+  const parts = month.split("-").map(Number);
+  const y = parts[0];
+  const m = parts[1];
+  if (y == null || m == null) return getCurrentMonth();
   if (m === 1) return `${y - 1}-12`;
   return `${y}-${String(m - 1).padStart(2, "0")}`;
 }
