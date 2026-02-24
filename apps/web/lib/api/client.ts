@@ -1,0 +1,87 @@
+/**
+ * API client: base URL + Bearer token from auth.
+ * All GET /metrics/kpis, /brief, /merchants/lifecycle require Authorization.
+ */
+function getBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  if (url) return url.replace(/\/$/, "");
+  if (typeof window !== "undefined") return "";
+  return "http://localhost:3001";
+}
+
+export interface ApiClientOptions {
+  getToken: () => string | null;
+}
+
+export function createApiClient(options: ApiClientOptions) {
+  const baseUrl = getBaseUrl();
+
+  async function request<T>(
+    path: string,
+    init?: RequestInit & { params?: Record<string, string> }
+  ): Promise<T> {
+    const token = options.getToken();
+    if (!token) {
+      throw new Error("Not authenticated");
+    }
+    const { params, ...rest } = init ?? {};
+    let url = path.startsWith("http") ? path : `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+    if (params && Object.keys(params).length > 0) {
+      const search = new URLSearchParams(params);
+      url += (url.includes("?") ? "&" : "?") + search.toString();
+    }
+    const res = await fetch(url, {
+      ...rest,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...rest.headers,
+      },
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      let userMessage: string;
+      try {
+        const body = text ? (JSON.parse(text) as { error?: string; message?: string }) : {};
+        userMessage = body.error ?? body.message ?? "";
+      } catch {
+        userMessage = "";
+      }
+      if (!userMessage) {
+        if (res.status === 401) userMessage = "Please sign in again.";
+        else if (res.status === 403) userMessage = "You don't have permission for this.";
+        else if (res.status === 404) userMessage = "The requested resource was not found.";
+        else if (res.status >= 500) userMessage = "Server error. Please try again later.";
+        else userMessage = text || res.statusText || "Something went wrong. Please try again.";
+      }
+      throw new Error(userMessage);
+    }
+    const contentType = res.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      return res.json() as Promise<T>;
+    }
+    return res.text() as Promise<T>;
+  }
+
+  return {
+    get<T>(path: string, params?: Record<string, string>): Promise<T> {
+      return request<T>(path, { method: "GET", params });
+    },
+    post<T>(path: string, body?: unknown, params?: Record<string, string>): Promise<T> {
+      return request<T>(path, {
+        method: "POST",
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        params,
+      });
+    },
+    patch<T>(path: string, body?: unknown): Promise<T> {
+      return request<T>(path, {
+        method: "PATCH",
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+    },
+    delete(path: string): Promise<void> {
+      return request<void>(path, { method: "DELETE" });
+    },
+  };
+}

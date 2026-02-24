@@ -111,16 +111,18 @@ Warn (but allow) if:
 - `charge_date`: parsed date
 - `charge_month`: `YYYY-MM-01`
 - `amount`: decimal
-- `status_current`: uppercased and mapped:
-  - map REFUND/REFUNDED → REFUND
-  - keep only statuses we care about (unknown → OTHER)
+- `status_current`: uppercased and mapped (see **Clover Billing Status Lifecycle** in `CLOVER_CSV_SCHEMA.md` §2):
+  - REFUND/REFUNDED → REFUND
+  - BILLED, COLLECTED, DEPOSITED, ONHOLD → kept as-is
+  - Canceled-type (Cancelled, Reversed, Uncollectible, Waived) → OTHER
+  - Failed (e.g. refund failed) → OTHER
+  - unknown → OTHER
 - `uninstall_date`: parsed date or null
 - `last_seen_at`: now()
 - `source_file_id`: upload_id
 
 ### Status mapping
-We treat statuses as **snapshot** only.
-Lifecycle is derived from months, not status history.
+We treat statuses as **snapshot** only. Clover lifecycle: Billed → On Hold / Collected / Refund / Canceled → Collected → Deposited. Lifecycle is derived from months, not status history.
 
 ---
 
@@ -141,8 +143,7 @@ Lifecycle is derived from months, not status history.
   - source_file_id
 
 **Rationale**
-Clover status evolves (BILLED → COLLECTED → DEPOSITED).  
-We always want the newest snapshot per charge.
+Clover status evolves (Billed → On Hold → Collected → Deposited, or Refund/Canceled). Same charge_id can appear in later CSVs with a different status; we upsert by charge_id so the **newest snapshot wins**. ONHOLD = billed but not yet collected/deposited (e.g. payment or deposit failed); tracked for cash reality.
 
 ### Output counts
 Track:
@@ -221,6 +222,7 @@ For month M:
 ### Collected
 Month M:
 - collected_amount = sum(amount) where month == M and status_current in (COLLECTED, DEPOSITED)
+- BILLED and ONHOLD are **not** counted as collected; they are billed-only until moved to COLLECTED/DEPOSITED.
 
 ### Deposited
 Month M:
@@ -230,6 +232,14 @@ Month M:
 Month M:
 - refunded_amount = sum(amount) where month == M and status_current == REFUND
   - (or amount < 0 as fallback)
+
+### Charge status values (aligned with Clover lifecycle; see `CLOVER_CSV_SCHEMA.md` §2)
+- **BILLED** — charge requested/scheduled, not yet collected
+- **ONHOLD** — collection or deposit blocked (e.g. payment failed, deposit failed, overdue)
+- **COLLECTED** — Clover collected payment from merchant's bank
+- **DEPOSITED** — Clover deposited your share (typically 2–3 weeks after collection)
+- **REFUND** — refund in progress or completed
+- **OTHER** — unknown, or Canceled (Reversed/Uncollectible/Waived), or Failed (refund attempt failed)
 
 ---
 
