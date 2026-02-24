@@ -75,7 +75,7 @@ export default function AdminPackagesPage() {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate({ ...form, price: Number(form.price) || 0, tier: form.tier || null });
+    createMutation.mutate({ ...form, price: Number(form.price) || 0, tier: form.tier || "" });
   };
 
   const handleUpdate = (e: React.FormEvent, row: PackageRow) => {

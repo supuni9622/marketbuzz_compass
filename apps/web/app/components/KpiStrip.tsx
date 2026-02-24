@@ -36,7 +36,6 @@ function formatNumber(n: number): string {
 
 function DeltaBadge({ delta, deltaPct }: { delta: number; deltaPct: number | null }) {
   const isPositive = delta > 0;
-  const isNegative = delta < 0;
   const isZero = delta === 0;
   const pctStr = deltaPct != null ? `${isPositive ? "+" : ""}${deltaPct}%` : "";
 
