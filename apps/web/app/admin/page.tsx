@@ -8,7 +8,7 @@ import { UploadStatusList } from "./UploadStatusList";
 
 function getBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL;
-  return url ? url.replace(/\/$/, "") : "http://localhost:3001";
+  return url ? url.replace(/\/$/, "") : "http://localhost:3002";
 }
 
 export default function AdminPage() {

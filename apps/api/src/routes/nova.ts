@@ -1,5 +1,5 @@
 /**
- * Nova routes: chat and growth plan. JWT required.
+ * Nova routes: chat, growth plan, and audio speech (TTS). JWT required.
  * @see docs/AGENT_SPEC.md
  */
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
@@ -11,6 +11,7 @@ import {
   runNovaGrowthPlan,
   type ChatMessage,
 } from "../nova/agent.js";
+import { createSpeech } from "../nova/audioSpeech.js";
 
 export async function novaRoutes(
   app: FastifyInstance,
@@ -214,6 +215,63 @@ export async function novaRoutes(
         app.log.error(err);
         return reply.status(500).send({
           error: err instanceof Error ? err.message : "Growth plan failed",
+        });
+      }
+    }
+  );
+
+  app.post(
+    "/speech",
+    {
+      preHandler: [authMiddleware],
+      schema: {
+        description:
+          "Convert text to speech using OpenAI TTS (Nova voice). Use e.g. for 'Read aloud' on Nova's responses.",
+        tags: ["Nova"],
+        body: {
+          type: "object",
+          properties: {
+            text: { type: "string", description: "Text to speak (max 4096 characters)" },
+            voice: { type: "string", description: "Optional voice (default: nova)" },
+            response_format: { type: "string", enum: ["mp3", "opus", "aac", "flac", "wav", "pcm"] },
+            speed: { type: "number", description: "Speed 0.25–4.0 (default 1.0)" },
+          },
+          required: ["text"],
+        },
+        response: {
+          200: { type: "string", contentMediaType: "audio/mpeg" },
+          400: { type: "object", properties: { error: { type: "string" } } },
+          503: { type: "object", properties: { error: { type: "string" } } },
+          500: { type: "object", properties: { error: { type: "string" } } },
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!config.openaiApiKey) {
+        return reply.status(503).send({
+          error: "Nova speech is not configured (OPENAI_API_KEY missing)",
+        });
+      }
+      const body = request.body as { text?: string; voice?: string; response_format?: string; speed?: number };
+      const text = body.text?.trim();
+      if (!text) {
+        return reply.status(400).send({ error: "text is required and must not be empty" });
+      }
+      try {
+        const result = await createSpeech({
+          text,
+          voice: body.voice,
+          response_format: body.response_format,
+          speed: body.speed,
+        });
+        return reply
+          .header("Content-Type", result.contentType)
+          .header("Content-Length", result.buffer.length)
+          .send(result.buffer);
+      } catch (err) {
+        app.log.error(err);
+        return reply.status(500).send({
+          error: err instanceof Error ? err.message : "Speech generation failed",
         });
       }
     }

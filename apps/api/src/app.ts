@@ -14,7 +14,7 @@ import { briefRoutes } from "./routes/brief.js";
 import { novaRoutes } from "./routes/nova.js";
 
 export interface BuildAppOptions {
-  /** Base URL for Swagger server (e.g. http://localhost:3001 or API Gateway URL). */
+  /** Base URL for Swagger server (e.g. http://localhost:3002 or API Gateway URL). */
   serverUrl?: string;
 }
 

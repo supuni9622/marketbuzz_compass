@@ -6,7 +6,7 @@ function getBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL;
   if (url) return url.replace(/\/$/, "");
   if (typeof window !== "undefined") return "";
-  return "http://localhost:3001";
+  return "http://localhost:3002";
 }
 
 export interface ApiClientOptions {
@@ -82,6 +82,40 @@ export function createApiClient(options: ApiClientOptions) {
     },
     delete(path: string): Promise<void> {
       return request<void>(path, { method: "DELETE" });
+    },
+
+    /**
+     * POST JSON body and return response as Blob (e.g. for /nova/speech audio).
+     */
+    async postBlob(path: string, body?: unknown): Promise<Blob> {
+      const token = options.getToken();
+      if (!token) throw new Error("Not authenticated");
+      const url = path.startsWith("http") ? path : `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        let userMessage: string;
+        try {
+          const parsed = text ? (JSON.parse(text) as { error?: string; message?: string }) : {};
+          userMessage = parsed.error ?? parsed.message ?? "";
+        } catch {
+          userMessage = "";
+        }
+        if (!userMessage) {
+          if (res.status === 401) userMessage = "Please sign in again.";
+          else if (res.status === 503) userMessage = "Speech is not configured.";
+          else userMessage = text || res.statusText || "Request failed.";
+        }
+        throw new Error(userMessage);
+      }
+      return res.blob();
     },
   };
 }

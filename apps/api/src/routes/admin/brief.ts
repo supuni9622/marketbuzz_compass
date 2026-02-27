@@ -103,7 +103,12 @@ export async function adminBriefRoutes(
           properties: {
             run_id: { type: "string", description: "ingestion_runs.run_id" },
           },
-          required: ["run_id"],
+        },
+        body: {
+          type: "object",
+          properties: {
+            run_id: { type: "string", description: "ingestion_runs.run_id" },
+          },
         },
         response: {
           200: {
@@ -133,7 +138,8 @@ export async function adminBriefRoutes(
         return reply.status(503).send({ error: "Database not configured" });
       }
       const q = request.query as { run_id?: string };
-      const runId = q.run_id?.trim();
+      const body = request.body as { run_id?: string } | undefined;
+      const runId = (body?.run_id ?? q.run_id)?.trim();
       if (!runId) {
         return reply.status(400).send({ error: "run_id is required" });
       }

@@ -1,16 +1,28 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/app/auth/AuthProvider";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "@/app/hooks/useFilters";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage, stripMarkdownForTTS } from "@/lib/utils";
 import Link from "next/link";
 import { TrendSparkline } from "./TrendSparkline";
 import { ByAppBarChart } from "./ByAppBarChart";
 import { NovaAvatar } from "./NovaAvatar";
+
+interface NovaChatResponse {
+  message: string;
+  tool_calls_used: number;
+}
+
+type ScorecardCardKey = "billed" | "active" | "collected" | "deposited" | "nra" | "refunded";
+
+interface ListenCard {
+  key: ScorecardCardKey;
+  askNovaQuestion: string;
+}
 
 interface MetricWithCompare {
   current: number;
@@ -82,6 +94,66 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
   });
 
   const [expandedCard, setExpandedCard] = useState<"billed" | "active" | "collected" | "deposited" | "nra" | "refunded" | null>(null);
+  const [audioCardKey, setAudioCardKey] = useState<typeof expandedCard>(null);
+  const [audioStatus, setAudioStatus] = useState<"loading" | "playing" | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleListen = useCallback(
+    async (card: ListenCard) => {
+      setAudioCardKey(card.key);
+      setAudioStatus("loading");
+      setAudioError(null);
+      try {
+        const body: {
+          messages: { role: "user"; content: string }[];
+          month?: string;
+          compare_month?: string;
+          app_id?: string;
+        } = { messages: [{ role: "user", content: card.askNovaQuestion }] };
+        if (monthApi) body.month = monthApi;
+        if (compareMonthApi) body.compare_month = compareMonthApi;
+        if (appId) body.app_id = appId;
+        const chatRes = await api.post<NovaChatResponse>("/nova/chat", body);
+        const textForTts = stripMarkdownForTTS(chatRes.message);
+        if (!textForTts.trim()) {
+          setAudioError("No content to read");
+          setAudioCardKey(null);
+          setAudioStatus(null);
+          return;
+        }
+        const blob = await api.postBlob("/nova/speech", { text: textForTts });
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        const onEnd = () => {
+          URL.revokeObjectURL(url);
+          audioRef.current = null;
+          setAudioCardKey(null);
+          setAudioStatus(null);
+        };
+        audio.addEventListener("ended", onEnd);
+        audio.addEventListener("error", onEnd);
+        setAudioStatus("playing");
+        await audio.play();
+      } catch (err) {
+        setAudioError(err instanceof Error ? err.message : "Audio failed");
+        setAudioCardKey(null);
+        setAudioStatus(null);
+      }
+    },
+    [api, monthApi, compareMonthApi, appId]
+  );
+
+  const handleStopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    setAudioCardKey(null);
+    setAudioStatus(null);
+  }, []);
 
   const hasData = data != null && !error;
   const showSkeleton = !hasData;
@@ -194,25 +266,69 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
       };
 
   const grid = (
+    <>
+      {audioError && (
+        <div
+          className="mt-4 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
+          role="alert"
+        >
+          <span>{audioError}</span>
+          <button
+            type="button"
+            onClick={() => setAudioError(null)}
+            className="rounded px-2 py-0.5 text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-800/50"
+            aria-label="Dismiss"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {cards.map((card) => (
         <div
           key={card.key}
           className="relative rounded-xl border border-slate-200 bg-white p-4 shadow-md transition-shadow hover:shadow-lg dark:border-slate-600 dark:bg-slate-800"
         >
-          {/* Upper right corner only: Ask Nova link — does not affect Show evidence / evidence area */}
-          <Link
-            href={`/ask?q=${encodeURIComponent(card.askNovaQuestion)}`}
-            className="absolute right-3 top-3 flex flex-col items-center gap-0.5 px-1 py-1 text-center text-xs font-medium text-teal-700 transition hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:text-teal-300 dark:hover:text-teal-200"
-            title={`Ask Nova to explain ${card.title} data`}
-            aria-label={`Ask Nova to explain ${card.title} data`}
-          >
-            <NovaAvatar size={28} className="flex-shrink-0" />
-            <span className="leading-tight max-w-[72px]">Ask Nova: {card.title}</span>
-            <svg className="h-3 w-3 flex-shrink-0 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </Link>
+          {/* Upper right: Ask Nova (text) + Listen (audio) */}
+          <div className="absolute right-3 top-3 flex flex-col items-end gap-1.5">
+            <Link
+              href={`/ask?q=${encodeURIComponent(card.askNovaQuestion)}`}
+              className="flex flex-col items-center gap-0.5 px-1 py-1 text-center text-xs font-medium text-teal-700 transition hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:text-teal-300 dark:hover:text-teal-200"
+              title={`Ask Nova to explain ${card.title} data`}
+              aria-label={`Ask Nova to explain ${card.title} data`}
+            >
+              <NovaAvatar size={28} className="flex-shrink-0" />
+              <span className="leading-tight max-w-[72px]">Ask Nova: {card.title}</span>
+              <svg className="h-3 w-3 flex-shrink-0 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+            {audioCardKey === card.key ? (
+              <button
+                type="button"
+                onClick={handleStopAudio}
+                className="flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-2 py-1 text-xs font-medium text-teal-800 shadow-sm hover:bg-teal-100 dark:border-teal-600 dark:bg-teal-900/30 dark:text-teal-200 dark:hover:bg-teal-800/50"
+                title="Stop playback"
+                aria-label="Stop audio"
+              >
+                <span className="h-2 w-2 rounded-full bg-red-500" />
+                {audioStatus === "loading" ? "Preparing…" : "Stop"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleListen(card)}
+                className="flex items-center gap-1 rounded-lg border border-teal-200 bg-white px-2 py-1 text-xs font-medium text-teal-700 shadow-sm hover:border-teal-300 hover:bg-teal-50 dark:border-teal-600 dark:bg-slate-800 dark:text-teal-300 dark:hover:bg-teal-900/30"
+                title={`Listen: Nova explains ${card.title} in audio`}
+                aria-label={`Listen to Nova explain ${card.title}`}
+              >
+                <svg className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 8.077 11 7.536 11 7V5a1 1 0 012 0v2c0 .536.077 1.077.293 1.586L15.536 15zM19 11a8 8 0 01-8 8" />
+                </svg>
+                <span>Listen</span>
+              </button>
+            )}
+          </div>
 
           {/* Main content unchanged: title, value, delta, sparkline, Show evidence, evidence area */}
           <p className="pr-20 text-sm font-medium text-slate-600 dark:text-slate-400">{card.title}</p>
@@ -258,6 +374,7 @@ export function Scorecards({ showHeading = true }: { showHeading?: boolean }) {
         </div>
       ))}
     </div>
+    </>
   );
   return wrap(grid);
 }

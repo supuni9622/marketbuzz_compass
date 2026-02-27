@@ -9,6 +9,7 @@ import { NovaAvatar } from "../components/NovaAvatar";
 import { UserAvatar } from "../components/UserAvatar";
 import { useApiClient } from "@/lib/api/useApiClient";
 import { useFilters } from "../hooks/useFilters";
+import { stripMarkdownForTTS } from "@/lib/utils";
 
 /** Markdown styling for Nova's message bubble */
 const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
@@ -50,6 +51,8 @@ export default function AskNovaPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasAutoSentRef = useRef(false);
   const reduceMotion = useReducedMotion();
@@ -105,6 +108,44 @@ export default function AskNovaPage() {
     },
     [sendMessage]
   );
+
+  const handleReadAloud = useCallback(
+    async (index: number) => {
+      const msg = messages[index];
+      if (msg?.role !== "assistant" || !msg.content.trim()) return;
+      const text = stripMarkdownForTTS(msg.content);
+      if (!text) return;
+      setSpeakingIndex(index);
+      setError(null);
+      try {
+        const blob = await api.postBlob("/nova/speech", { text });
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        const onEnd = () => {
+          URL.revokeObjectURL(url);
+          setSpeakingIndex(null);
+          audioRef.current = null;
+        };
+        audio.addEventListener("ended", onEnd);
+        audio.addEventListener("error", onEnd);
+        await audio.play();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Speech failed");
+        setSpeakingIndex(null);
+      }
+    },
+    [messages, api]
+  );
+
+  const handleStopSpeech = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    setSpeakingIndex(null);
+  }, []);
 
   const handleExampleClick = useCallback(
     (question: string) => {
@@ -228,9 +269,48 @@ export default function AskNovaPage() {
                       : "border border-teal-100 bg-white/90 text-slate-800 shadow-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   }`}
                 >
-                  <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
-                    {msg.role === "user" ? "You" : "Nova"}
-                  </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
+                      {msg.role === "user" ? "You" : "Nova"}
+                    </span>
+                    {msg.role === "assistant" && msg.content.trim() && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          speakingIndex === i ? handleStopSpeech() : handleReadAloud(i)
+                        }
+                        disabled={isLoading}
+                        className="flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50/80 px-2.5 py-1.5 text-xs font-medium text-teal-800 shadow-sm transition hover:border-teal-300 hover:bg-teal-100 focus:outline-none focus:ring-2 focus:ring-teal-500/50 disabled:opacity-50 dark:border-teal-600 dark:bg-teal-900/30 dark:text-teal-200 dark:hover:bg-teal-800/50"
+                        title={speakingIndex === i ? "Stop playback" : "Read aloud (AI voice)"}
+                        aria-label={speakingIndex === i ? "Stop speech" : "Read aloud"}
+                      >
+                        {speakingIndex === i ? (
+                          <>
+                            <span className="inline-block h-3.5 w-3.5 rounded-full bg-red-500" />
+                            <span>Stop</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="h-4 w-4 shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              aria-hidden="true"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 8.077 11 7.536 11 7V5a1 1 0 012 0v2c0 .536.077 1.077.293 1.586L15.536 15zM19 11a8 8 0 01-8 8"
+                              />
+                            </svg>
+                            <span>Read aloud</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   {msg.role === "assistant" ? (
                     <div className="mt-1 markdown-content">
                       <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>

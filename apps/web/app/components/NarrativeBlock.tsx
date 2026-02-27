@@ -47,7 +47,10 @@ export function NarrativeBlock({
           {content}
         </div>
         {placeholder && (
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Summary pending — Nova coming soon.</p>
+          <div className="mt-2 space-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className="font-medium text-slate-600 dark:text-slate-300">No brief for this month yet.</p>
+            <p>An admin can generate one from Admin → Uploads (e.g. after a CSV run, use “Retry Nova” on a run, or trigger brief generation for the selected month).</p>
+          </div>
         )}
       </div>
     </section>
